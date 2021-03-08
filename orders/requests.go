@@ -5,10 +5,8 @@ import(
 
 
 func requests_above(e Elevator) int{
-	for level:= e.floor+1; level < _numFloors; level++//level = floor, but floor was used in Elevator
-	{
-		for int button := 0; button < 3; button ++ //N_BUTTONS == 3
-		{
+	for level:= e.floor+1; level < _numFloors; level++{ //level = floor, but floor was used in Elevator
+		for button := 0; button < 3; button ++{ //N_BUTTONS == 3
 			if e.requests[level][button] {
 				return 1
 			}
@@ -88,7 +86,7 @@ func requests_shouldStop(e Elevator) int {
 func requests_clearAtCurrentFloor(e Elevator) Elevator {
 	switch (e.config.clearRequestVariant) {
 	case CV_All:
-		for button := 0; button < N_BUTTONS; button++ {
+		for button := 0; button < 3; button++ { //numbuttons= 3
 		e.requests[e.floor][button] = 0
 	}
 		break
@@ -112,6 +110,7 @@ func requests_clearAtCurrentFloor(e Elevator) Elevator {
 
 	return e
 }
+
 
 
 
