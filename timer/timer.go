@@ -31,7 +31,7 @@ func timerStop(timerActive chan <- bool, timerEndTime chan <- float64){
 
 
 //timerTimedOut is used as to find out whether we have surpassed the duration-limit. If we have, it returns true.
-func timerTimedOut(duration float64, wg *sync.WaitGroup,timerActive chan bool, timerEndTime  chan float64) { //bool{
+func countdown(duration float64, wg *sync.WaitGroup,timerActive chan bool, timerEndTime  chan float64) {
 	defer wg.Done()
 	timerStart(duration, timerActive, timerEndTime)
 	endTime := <-timerEndTime
@@ -39,7 +39,7 @@ func timerTimedOut(duration float64, wg *sync.WaitGroup,timerActive chan bool, t
 	for{
 		if active == true {
 			if getWallTime() > endTime{
-				fmt.Println("Too long time")
+				fmt.Println("Done boi")
 				break
 				//can also just return true here, if we don't want to have a for loop but poll instead. Thought for loop
 				//was best for goroutines.
@@ -47,25 +47,36 @@ func timerTimedOut(duration float64, wg *sync.WaitGroup,timerActive chan bool, t
 
 		}
 	}
-	//timerStop(timerActive, timerEndTime)
+}
+func isTimerDone(timerActive chan bool) bool{
+	active := <-timerActive
+	if active == true{
+		return false //if it is not done return false
+	}
+	return true
 }
 
 
 func main(){
+
 	var wg sync.WaitGroup
-	timerActive := make(chan bool,1)
+	timerActive := make(chan bool,2)
 	timerEndTime := make(chan float64,1)
 	//timerStart(5000, timerActive, timerEndTime)
+
 	for i := 0; i < 30; i++{
 		wg.Add(1)
-		go timerTimedOut(float64(2000), &wg, timerActive, timerEndTime)
-
+		go countdown(float64(i*200), &wg, timerActive, timerEndTime)
 	}
+
 
 	wg.Wait()
 	close(timerActive)
 	close(timerEndTime)
-	fmt.Println("Finished process")
+	if isTimerDone(timerActive){
+		fmt.Println("Finished process")
+	}
+
 
 	//wg.Add(1)
 	//go timerTimedOut(1000, &wg, timerActive, timerEndTime) //is 1 sec slower than what is written in timer, e.g. if 5000 ms is written
