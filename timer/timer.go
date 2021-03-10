@@ -31,7 +31,7 @@ func timerStop(timerActive chan <- bool, timerEndTime chan <- float64){
 
 
 //timerTimedOut is used as to find out whether we have surpassed the duration-limit. If we have, it returns true.
-func countdown(duration float64, wg *sync.WaitGroup,timerActive chan bool, timerEndTime  chan float64) {
+func Countdown(duration float64, wg *sync.WaitGroup,timerActive chan bool, timerEndTime  chan float64) {
 	defer wg.Done()
 	timerStart(duration, timerActive, timerEndTime)
 	endTime := <-timerEndTime
@@ -48,7 +48,7 @@ func countdown(duration float64, wg *sync.WaitGroup,timerActive chan bool, timer
 		}
 	}
 }
-func isTimerDone(timerActive chan bool) bool{
+func IsTimerDone(timerActive chan bool) bool{
 	active := <-timerActive
 	if active == true{
 		return false //if it is not done return false
@@ -60,20 +60,20 @@ func isTimerDone(timerActive chan bool) bool{
 func main(){
 
 	var wg sync.WaitGroup
-	timerActive := make(chan bool,2)
+	timerActive := make(chan bool,1)
 	timerEndTime := make(chan float64,1)
 	//timerStart(5000, timerActive, timerEndTime)
 
 	for i := 0; i < 30; i++{
 		wg.Add(1)
-		go countdown(float64(i*200), &wg, timerActive, timerEndTime)
+		go Countdown(float64(i*100), &wg, timerActive, timerEndTime)
 	}
 
 
 	wg.Wait()
 	close(timerActive)
 	close(timerEndTime)
-	if isTimerDone(timerActive){
+	if IsTimerDone(timerActive){
 		fmt.Println("Finished process")
 	}
 
