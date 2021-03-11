@@ -1,4 +1,4 @@
-package elevio
+package io
 
 import "time"
 import "sync"
@@ -35,11 +35,6 @@ type ButtonEvent struct {
 	Button ButtonType
 }
 
-
-
-
-
-
 func Init(addr string, numFloors int) {
 	if _initialized {
 		fmt.Println("Driver already initialized!")
@@ -54,8 +49,6 @@ func Init(addr string, numFloors int) {
 	}
 	_initialized = true
 }
-
-
 
 func SetMotorDirection(dir MotorDirection) {
 	_mtx.Lock()
@@ -140,11 +133,6 @@ func PollObstructionSwitch(receiver chan<- bool) {
 		prev = v
 	}
 }
-
-
-
-
-
 
 
 func getButton(button ButtonType, floor int) bool {

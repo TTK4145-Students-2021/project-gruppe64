@@ -1,57 +1,59 @@
 package main
 
-import "./elevio"
+import (
+	"realtimeProject/project-gruppe64/io"
+)
 import "fmt"
 
 func main(){
 
     numFloors := 4
 
-    elevio.Init("localhost:15657", numFloors)
+    io.Init("localhost:15657", numFloors)
     
-    var d elevio.MotorDirection = elevio.MD_Up
+    var d io.MotorDirection = io.MD_Up
     //elevio.SetMotorDirection(d)
     
-    drv_buttons := make(chan elevio.ButtonEvent)
+    drv_buttons := make(chan io.ButtonEvent)
     drv_floors  := make(chan int)
     drv_obstr   := make(chan bool)
     drv_stop    := make(chan bool)    
     
-    go elevio.PollButtons(drv_buttons)
-    go elevio.PollFloorSensor(drv_floors)
-    go elevio.PollObstructionSwitch(drv_obstr)
-    go elevio.PollStopButton(drv_stop)
+    go io.PollButtons(drv_buttons)
+    go io.PollFloorSensor(drv_floors)
+    go io.PollObstructionSwitch(drv_obstr)
+    go io.PollStopButton(drv_stop)
     
     
     for {
         select {
         case a := <- drv_buttons:
             fmt.Printf("%+v\n", a)
-            elevio.SetButtonLamp(a.Button, a.Floor, true)
+            io.SetButtonLamp(a.Button, a.Floor, true)
             
         case a := <- drv_floors:
             fmt.Printf("%+v\n", a)
             if a == numFloors-1 {
-                d = elevio.MD_Down
+                d = io.MD_Down
             } else if a == 0 {
-                d = elevio.MD_Up
+                d = io.MD_Up
             }
-            elevio.SetMotorDirection(d)
+            io.SetMotorDirection(d)
             
             
         case a := <- drv_obstr:
             fmt.Printf("%+v\n", a)
             if a {
-                elevio.SetMotorDirection(elevio.MD_Stop)
+                io.SetMotorDirection(io.MD_Stop)
             } else {
-                elevio.SetMotorDirection(d)
+                io.SetMotorDirection(d)
             }
             
         case a := <- drv_stop:
             fmt.Printf("%+v\n", a)
             for f := 0; f < numFloors; f++ {
-                for b := elevio.ButtonType(0); b < 3; b++ {
-                    elevio.SetButtonLamp(b, f, false)
+                for b := io.ButtonType(0); b < 3; b++ {
+                    io.SetButtonLamp(b, f, false)
                 }
             }
         }
