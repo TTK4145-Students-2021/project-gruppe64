@@ -39,25 +39,6 @@ type Elevator struct {
 	}
 }
 
-
-// Implementering av funksjoner (C-fil)
-
-/* Må droppe med channels foreløpig fordi det gir feilmelding i elevatorPrint
-func ebToString(elevBehav chan<- ElevatorBehaviour) string { // Trenger vi å importere? Stor forbokstav!
-	behav := ""
-	select {
-	case elevBehav<-EB_Idle:
-		behav = "ED_Idle"
-	case elevBehav<-EB_DoorOpen:
-		behav = "EB_DoorOpen"
-	case elevBehav<-EB_Moving:
-		behav = "EB_Moving"
-	default:
-		behav = "EB_Undefined"
-	}
-	return behav // Returne her eller i hver case?
-} */
-
 func ebToString(elevBehav ElevatorBehaviour) string {
 	switch elevBehav {
 	case EB_Idle:
@@ -82,7 +63,7 @@ func elevioMotorDirToString(mDirection io.MotorDirection) string { // Importere?
 	return "MD_Undefined"
 }
 
-func checkRequests(number1 int, number2 int) bool {
+func checkRequests(e Elevator, number1 int, number2 int) bool {
 	elevator:= Elevator{}
 	elevatorRequests := elevator.Requests
 	for i:=0; i< NumFloors; i++ {
@@ -109,7 +90,7 @@ func ElevatorPrint(es Elevator) {
 			if (f == NumFloors-1 && btn == int(io.BT_HallUp)) || (f == 0 && btn == int(io.BT_HallDown)){ // Bedre måte å gjøre dette på enn ved konvertering til int
 				fmt.Printf("|     ")
 			} else {
-				if checkRequests(f,btn) == true { // Fint om vi finner en bedre måte å skrive denne på
+				if checkRequests(es, f,btn) == true { // Fint om vi finner en bedre måte å skrive denne på
 					fmt.Printf("|  #  ")
 				} else{
 					fmt.Printf("|  -  ")

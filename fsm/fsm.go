@@ -10,12 +10,11 @@ import (
 
 var elev elevator.Elevator
 
-func Init() {
-	elev = elevator.ElevatorUnitialized()
-	
+func Init(e elevator.Elevator) {
+	elev = e
 }
 
-func setAllLights(es elevator.Elevator){ //Denne ble nok feil (?)
+func setAllLights(){ //Denne ble nok feil (?)
 	for floor := 0; floor < elevator.NumFloors; floor++ {
 		for btn := 0; btn < elevator.NumButtons; btn++ {
 			io.SetButtonLamp(io.BT_Cab, floor, true ) //NOt sure if right button
@@ -57,13 +56,15 @@ func FSMOnRequestButtonPress(btnFloor int, btnType io.ButtonType){
 		}
 		break
 	}
-	setAllLights(elev)
+	setAllLights()
 	fmt.Printf("\nNew state:\n")
 	elevator.ElevatorPrint(elev)
 }
 
 func FSMOnFloorArrival(newFloor int){
 	//PRINT NEW FLOOR
+	fmt.Printf("\n New floor \n")
+	fmt.Printf("  |floor = %-2d          |\n",newFloor)
 	elevator.ElevatorPrint(elev)
 	elev.Floor = newFloor
 
@@ -77,7 +78,7 @@ func FSMOnFloorArrival(newFloor int){
 			io.SetDoorOpenLamp(true)
 			elev = requests.RequestsClearAtCurrentFloor(elev)
 			timer.TimerStart(elev.Config.DoorOpenDurationSec)
-			setAllLights(elev)
+			setAllLights()
 			elev.Behaviour = elevator.EB_DoorOpen
 		}
 	default:

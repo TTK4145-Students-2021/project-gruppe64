@@ -10,9 +10,10 @@ import "fmt"
 func main(){
 
 	numFloors := elevator.NumFloors
+	elev := elevator.ElevatorUnitialized()
 
 	io.Init("localhost:15657", numFloors)
-	fsm.Init()
+	fsm.Init(elev)
 
 	var d io.MotorDirection = io.MD_Up
 	//elevio.SetMotorDirection(d)
@@ -43,6 +44,7 @@ func main(){
 				d = io.MD_Up
 			}
 			io.SetMotorDirection(d)
+			fsm.FSMOnFloorArrival(a)
 
 
 		case a := <- drv_obstr:
