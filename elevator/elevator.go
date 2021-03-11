@@ -1,39 +1,39 @@
-package fsm
+package elevator
 
 import (
-	"realtimeProject/project-gruppe64/io"
 	"fmt"
+	"realtimeProject/project-gruppe64/io"
 )
 // Enum definitions
 
 const (
-	numButtons int = 3 // Fra elevator_io_types.h
-	numFloors int = 4 // Skrevet om fra elevator_io - må kanskje endres
+	NumButtons int = 3 // Fra elevator_io_types.h
+	NumFloors int = 4 // Skrevet om fra elevator_io - må kanskje endres
 )
 
 type ElevatorBehaviour int
 
 const (
-	EB_Idle ElevatorBehaviour 	= 0		// Evt skrive om til camelCase!
-	EB_DoorOpen 				= 1
-	EB_Moving					= 2
+	EB_Idle     ElevatorBehaviour = 0 // Evt skrive om til camelCase!
+	EB_DoorOpen                   = 1
+	EB_Moving                     = 2
 )
 
 type ClearRequestVariant int
 
 const (
-	CV_All 		ClearRequestVariant	= 0
-	CV_InDirn 						= 1
+	CV_All    ClearRequestVariant = 0
+	CV_InDirn                     = 1
 )
 
 // Definition of structs
 
 type Elevator struct {
-	Floor int
+	Floor          int
 	MotorDirection io.MotorDirection
-	Requests[numFloors][numButtons] int // Hardkoder størrelse sånn halvveis
-	Behaviour ElevatorBehaviour
-	Config struct{
+	Requests       [NumFloors][NumButtons] int // Hardkoder størrelse sånn halvveis
+	Behaviour      ElevatorBehaviour
+	Config         struct{
 		ClearRequestVariant ClearRequestVariant
 		DoorOpenDurationSec float64 // Tilsvarer double i C
 	}
@@ -85,8 +85,8 @@ func elevioMotorDirToString(mDirection io.MotorDirection) string { // Importere?
 func checkRequests(number1 int, number2 int) bool {
 	elevator:= Elevator{}
 	elevatorRequests := elevator.Requests
-	for i:=0; i<numFloors; i++ {
-		for j:=0; j < numButtons; j++ {
+	for i:=0; i< NumFloors; i++ {
+		for j:=0; j < NumButtons; j++ {
 			if elevatorRequests[i][j] == elevatorRequests[number1][number2] {
 				return true
 			}
@@ -96,17 +96,17 @@ func checkRequests(number1 int, number2 int) bool {
 }
 
 func ElevatorPrint(es Elevator) {
-	fmt.Printf("  +--------------------+\n") // Sjekk om dette er riktig print-funksjon!
-	fmt.Printf("  |floor = %-2d          |\n",es.Floor) // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)
+	fmt.Printf("  +--------------------+\n")                                           // Sjekk om dette er riktig print-funksjon!
+	fmt.Printf("  |floor = %-2d          |\n",es.Floor)                                // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)
 	fmt.Printf("|direction  = %-12.12s|\n", elevioMotorDirToString(es.MotorDirection)) // Måtte dele opp for at det skulle bli riktig
-	fmt.Print("|behaviour = %-12.12s|\n", ebToString(es.Behaviour))// Hvorfor feilmelding her?
+	fmt.Print("|behaviour = %-12.12s|\n", ebToString(es.Behaviour))                    // Hvorfor feilmelding her?
 	fmt.Printf("  +--------------------+\n")
 	fmt.Printf("  |  | up  | dn  | cab |\n")
 
-	for f := numFloors-1; f >= 0; f-- {
+	for f := NumFloors -1; f >= 0; f-- {
 		fmt.Printf("  | %d", f)
-		for btn := 0; btn < numButtons; btn++{
-			if (f == numFloors-1 && btn == int(io.BT_HallUp)) || (f == 0 && btn == int(io.BT_HallDown)){ // Bedre måte å gjøre dette på enn ved konvertering til int
+		for btn := 0; btn < NumButtons; btn++{
+			if (f == NumFloors-1 && btn == int(io.BT_HallUp)) || (f == 0 && btn == int(io.BT_HallDown)){ // Bedre måte å gjøre dette på enn ved konvertering til int
 				fmt.Printf("|     ")
 			} else {
 				if checkRequests(f,btn) == true { // Fint om vi finner en bedre måte å skrive denne på

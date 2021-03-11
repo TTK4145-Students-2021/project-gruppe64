@@ -2,15 +2,22 @@ package fsm
 
 import (
 	"fmt"
+	"realtimeProject/project-gruppe64/elevator"
 	"realtimeProject/project-gruppe64/io"
+	"realtimeProject/project-gruppe64/requests"
 	"realtimeProject/project-gruppe64/timer"
 )
 
-var elevator Elevator
+var elev elevator.Elevator
 
-func setAllLights(es Elevator){ //Denne ble nok feil (?)
-	for floor := 0; floor < NFloors; floor++ {
-		for btn := 0; btn < NButtons; btn++ {
+func Init() {
+	elev = elevator.ElevatorUnitialized()
+	
+}
+
+func setAllLights(es elevator.Elevator){ //Denne ble nok feil (?)
+	for floor := 0; floor < elevator.NumFloors; floor++ {
+		for btn := 0; btn < elevator.NumButtons; btn++ {
 			io.SetButtonLamp(io.BT_Cab, floor, true ) //NOt sure if right button
 		}
 	}
@@ -18,82 +25,82 @@ func setAllLights(es Elevator){ //Denne ble nok feil (?)
 
 func FSMOnInitBetweenFloors(){
 	io.SetMotorDirection(io.MD_Down)
-	elevator.Dirn = io.MD_Down
-	elevator.Behaviour = EB_Moving
+	elev.MotorDirection = io.MD_Down
+	elev.Behaviour = elevator.EB_Moving
 }
 
 func FSMOnRequestButtonPress(btnFloor int, btnType io.ButtonType){
 	//PRINT BUTTON FLOOR AND TYPE, use printf
 	//PRINT ELEVATOR
-	switch elevator.Behaviour {
-	case EB_DoorOpen:
-		if elevator.Floor == btnFloor {
-			timer.TimerStart(elevator.Config.DoorOpenDuration_s)
+	switch elev.Behaviour {
+	case elevator.EB_DoorOpen:
+		if elev.Floor == btnFloor {
+			timer.TimerStart(elev.Config.DoorOpenDurationSec)
 		} else {
-			elevator.Requests[btnFloor][btnType] = 1;
+			elev.Requests[btnFloor][btnType] = 1;
 		}
 		break
 
-	case EB_Moving:
-		elevator.Requests[btnFloor][btnType] = 1;
+	case elevator.EB_Moving:
+		elev.Requests[btnFloor][btnType] = 1;
 		break
 
-	case EB_Idle:
-		if elevator.Floor == btnFloor {
+	case elevator.EB_Idle:
+		if elev.Floor == btnFloor {
 			io.SetDoorOpenLamp(true)
-			timer.TimerStart(elevator.Config.DoorOpenDuration_s)
-			elevator.Behaviour = EB_DoorOpen
+			timer.TimerStart(elev.Config.DoorOpenDurationSec)
+			elev.Behaviour = elevator.EB_DoorOpen
 		} else {
-			elevator.Requests[btnFloor][btnType] = 1
-			elevator.Dirn = RequestsChooseDirection(elevator)
-			io.SetMotorDirection(elevator.Dirn)
+			elev.Requests[btnFloor][btnType] = 1
+			elev.MotorDirection = requests.RequestsChooseDirection(elev)
+			io.SetMotorDirection(elev.MotorDirection)
 		}
 		break
 	}
-	setAllLights(elevator)
+	setAllLights(elev)
 	fmt.Printf("\nNew state:\n")
-	ElevatorPrint(elevator)
+	elevator.ElevatorPrint(elev)
 }
 
 func FSMOnFloorArrival(newFloor int){
 	//PRINT NEW FLOOR
-	ElevatorPrint(elevator)
-	elevator.Floor = newFloor
+	elevator.ElevatorPrint(elev)
+	elev.Floor = newFloor
 
-	io.SetFloorIndicator(elevator.Floor)
-	//ElevoutputDevice.floorIndicator(elevator.floor)
+	io.SetFloorIndicator(elev.Floor)
+	//ElevoutputDevice.floorIndicator(elev.floor)
 
-	switch elevator.behaviour {
-	case EB_Moving:
-		if requests.RequestsShouldStop(elevator){
+	switch elev.Behaviour {
+	case elevator.EB_Moving:
+		if requests.RequestsShouldStop(elev){
 			io.SetMotorDirection(io.MD_Stop)
 			io.SetDoorOpenLamp(true)
-			elevator = RequestsClearAtCurrentFloor(elevator)
-			timer.TimerStart(elevator.Config.DoorOpenDuration_s)
-			setAllLights(elevator)
-			elevator.Behaviour = EB_DoorOpen
+			elev = requests.RequestsClearAtCurrentFloor(elev)
+			timer.TimerStart(elev.Config.DoorOpenDurationSec)
+			setAllLights(elev)
+			elev.Behaviour = elevator.EB_DoorOpen
 		}
 	default:
 	}
 	fmt.Println("\nNew state:")
-	ElevatorPrint(elevator)
+	elevator.ElevatorPrint(elev)
 }
 
 func FSMOnDoorTimeout(){
 	// PRINT SOME FORMATTING STUFF
-	ElevatorPrint(elevator)
+	elevator.ElevatorPrint(elev)
 
-	switch elevator.Behaviour {
-	case EB_DoorOpen:
-		elevator.Dirn = RequestsChooseDirection(elevator)
+	switch elev.Behaviour {
+	case elevator.EB_DoorOpen:
+		elev.MotorDirection = requests.RequestsChooseDirection(elev)
 
 		io.SetDoorOpenLamp(false)
-		io.SetMotorDirection(elevator.Dirn)
+		io.SetMotorDirection(elev.MotorDirection)
 
-		if elevator.Dirn == io.MD_Stop {
-			elevator.Behaviour = EB_Idle
+		if elev.MotorDirection == io.MD_Stop {
+			elev.Behaviour = elevator.EB_Idle
 		} else {
-			elevator.Behaviour = EB_Moving
+			elev.Behaviour = elevator.EB_Moving
 		}
 
 		break
@@ -102,5 +109,5 @@ func FSMOnDoorTimeout(){
 	}
 
 	fmt.Printf("\nNew state:\n")
-	ElevatorPrint(elevator)
+	elevator.ElevatorPrint(elev)
 }
