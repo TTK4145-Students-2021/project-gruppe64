@@ -64,6 +64,7 @@ func elevioMotorDirToString(mDirection io.MotorDirection) string { // Importere?
 }
 
 
+
 func ElevatorPrint(elev Elevator) {
 	fmt.Printf("  +--------------------+\n")                                             // Sjekk om dette er riktig print-funksjon!
 	fmt.Printf("  |floor = %-2d          |\n", elev.Floor)                               // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)

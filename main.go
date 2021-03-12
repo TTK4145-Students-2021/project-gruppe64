@@ -4,16 +4,16 @@ import (
 	"realtimeProject/project-gruppe64/elevator"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/io"
+	"realtimeProject/project-gruppe64/timer"
 )
 import "fmt"
 
 func main(){
 
 	numFloors := elevator.NumFloors
-	elev := elevator.ElevatorUnitialized()
 
 	io.Init("localhost:15657", numFloors)
-	fsm.Init(elev)
+
 
 	var d io.MotorDirection = io.MD_Up
 	//elevio.SetMotorDirection(d)
@@ -27,9 +27,13 @@ func main(){
 	go io.PollFloorSensor(drv_floors)
 	go io.PollObstructionSwitch(drv_obstr)
 	go io.PollStopButton(drv_stop)
-
+	fsm.Init()
 
 	for {
+		if timer.TimerTimedOut(){
+			fsm.FSMOnDoorTimeout()
+			timer.TimerStop()
+		}
 		select {
 		case a := <- drv_buttons:
 			fmt.Printf("%+v\n", a)
@@ -40,10 +44,12 @@ func main(){
 			fmt.Printf("%+v\n", a)
 			if a == numFloors-1 {
 				d = io.MD_Down
+				io.SetMotorDirection(d)
 			} else if a == 0 {
 				d = io.MD_Up
+				io.SetMotorDirection(d)
 			}
-			io.SetMotorDirection(d)
+
 			fsm.FSMOnFloorArrival(a)
 
 
