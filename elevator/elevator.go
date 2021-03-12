@@ -63,45 +63,30 @@ func elevioMotorDirToString(mDirection io.MotorDirection) string { // Importere?
 	return "MD_Undefined"
 }
 
-func checkRequests(e Elevator, number1 int, number2 int) bool {
-	elevator:= Elevator{}
-	elevatorRequests := elevator.Requests
-	for i:=0; i< NumFloors; i++ {
-		for j:=0; j < NumButtons; j++ {
-			if elevatorRequests[i][j] == elevatorRequests[number1][number2] {
-				return true
-			}
-		}
-	}
-	return false
-}
 
-func ElevatorPrint(es Elevator) {
-	fmt.Printf("  +--------------------+\n")                                           // Sjekk om dette er riktig print-funksjon!
-	fmt.Printf("  |floor = %-2d          |\n",es.Floor)                                // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)
-	fmt.Printf("|direction  = %-12.12s|\n", elevioMotorDirToString(es.MotorDirection)) // Måtte dele opp for at det skulle bli riktig
-	fmt.Print("|behaviour = %-12.12s|\n", ebToString(es.Behaviour))                    // Hvorfor feilmelding her?
+func ElevatorPrint(elev Elevator) {
+	fmt.Printf("  +--------------------+\n")                                             // Sjekk om dette er riktig print-funksjon!
+	fmt.Printf("  |floor = %-2d          |\n", elev.Floor)                               // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)
+	fmt.Printf("|direction  = %-12.12s|\n", elevioMotorDirToString(elev.MotorDirection)) // Måtte dele opp for at det skulle bli riktig
+	fmt.Printf("|behaviour = %s|\n", ebToString(elev.Behaviour))                         // Hvorfor feilmelding her?
 	fmt.Printf("  +--------------------+\n")
 	fmt.Printf("  |  | up  | dn  | cab |\n")
-
-	for f := NumFloors -1; f >= 0; f-- {
-		fmt.Printf("  | %d", f)
-		for btn := 0; btn < NumButtons; btn++{
-			if (f == NumFloors-1 && btn == int(io.BT_HallUp)) || (f == 0 && btn == int(io.BT_HallDown)){ // Bedre måte å gjøre dette på enn ved konvertering til int
+	for f := NumFloors - 1; f >= 0; f-- {
+		fmt.Printf("\n  | %d", f)
+		for b := 0; b < NumButtons; b++ {
+			if (f == NumFloors-1 && b == int(io.BT_HallUp)) || (f == 0 && b == io.BT_HallDown) {
 				fmt.Printf("|     ")
 			} else {
-				if checkRequests(es, f,btn) == true { // Fint om vi finner en bedre måte å skrive denne på
+				if elev.Requests[f][b] != 0 {
 					fmt.Printf("|  #  ")
-				} else{
+				} else {
 					fmt.Printf("|  -  ")
 				}
-				// fmt.Printf(es.requests[f][btn] ? "|  #  " : "|  -  "); Originale linjen, disse operatorene finnes ikke i go
 			}
 		}
-		fmt.Printf("|\n")
 	}
-	fmt.Printf("  +--------------------+\n")
 }
+
 
 
 
