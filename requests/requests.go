@@ -9,7 +9,7 @@ import (
 //Requests_above checks if there are any requests above by first iterating through the floors above the current floor
 //and checking if any of the buttons are pushed. Returns 1 if there are any requests, 0 if there are none.
 func RequestsAbove(e elevator.Elevator) bool{
-	for level := int(e.Floor + 1); level < elevator.NumFloors; level++ { //level = floor, but floor was used in Elevator
+	for level := e.Floor + 1; level < elevator.NumFloors; level++ { //level = floor, but floor was used in Elevator
 		for button := 0; button < elevator.NumButtons; button ++{
 			if e.Requests[level][button] != 0{
 				return true
@@ -46,6 +46,13 @@ func RequestsChooseDirection(e elevator.Elevator) io.MotorDirection {
 			return io.MD_Stop
 		}
 	case io.MD_Down:
+		if RequestsBelow(e){
+			return io.MD_Down
+		} else if RequestsAbove(e) {
+			return io.MD_Up
+		} else {
+			return io.MD_Stop
+		}
 	case io.MD_Stop: // there should only be one request in this case. Checking up or down first is arbitrary.
 		if RequestsBelow(e) {
 			return io.MD_Down
@@ -56,7 +63,6 @@ func RequestsChooseDirection(e elevator.Elevator) io.MotorDirection {
 		}
 	default:
 		return io.MD_Stop
-
 	}
 	return io.MD_Stop
 }
@@ -69,18 +75,14 @@ func RequestsChooseDirection(e elevator.Elevator) io.MotorDirection {
 func RequestsShouldStop(e elevator.Elevator) bool {
 	switch e.MotorDirection {
 	case io.MD_Down:
-		eRequests := e.Requests[e.Floor][io.BT_HallDown] != 0 || e.Requests[e.Floor][io.BT_Cab] != 0 // HG:
-		eNotRequests := RequestsBelow(e)
-		if eRequests || eNotRequests == false{ //This gives me if eRequests == true, right?
+		if e.Requests[e.Floor][io.BT_HallDown] != 0 || e.Requests[e.Floor][io.BT_Cab] != 0 || RequestsBelow(e) == false{ //This gives me if eRequests == true, right?
 			return true
 		} else{
 			return false
 		}
 
 	case io.MD_Up:
-		eRequests := e.Requests[e.Floor][io.BT_HallUp] != 0 || e.Requests[e.Floor][io.BT_Cab] != 0
-		eNotRequests := RequestsAbove(e)
-		if eRequests || eNotRequests == false{ //This gives me if eRequests == true, right?
+		if e.Requests[e.Floor][io.BT_HallUp] != 0 || e.Requests[e.Floor][io.BT_Cab] != 0 || RequestsAbove(e) == false{ //This gives me if eRequests == true, right?
 			return true
 		} else{
 			return false
