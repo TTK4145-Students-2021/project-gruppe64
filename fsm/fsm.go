@@ -1,132 +1,190 @@
 package fsm
 
 import (
-	"fmt"
-	"realtimeProject/project-gruppe64/elevator"
-	"realtimeProject/project-gruppe64/io"
-	"realtimeProject/project-gruppe64/requests"
-	"realtimeProject/project-gruppe64/timer"
+	"realtimeProject/project-gruppe64/hardwareIO"
 )
 
-var runningElevator elevator.Elevator
 
-func Init() {
-	runningElevator = elevator.ElevatorUnitialized()
+
+func InitializeElevator(floorArrival <-chan int, elevatorUpdate chan<- Elevator){
+
+	//elevatorUpdateCh := make(chan Elevator)
+	//currentElevatorNOCh := make(chan Elevator)
+	//currentElevatorFACh := make(chan Elevator)
+	//currentElevatorOECh := make(chan Elevator)
+
+	//runTimerCh := make(chan float64)
+	//timedOutCh := make(chan bool)
+
+	//go UpdateElevatorInformation(currentElevatorNOCh, currentElevatorFACh, currentElevatorOECh, elevatorUpdateCh)
+	//go NewOrderFSM(buttonPressed, currentElevatorNOCh, elevatorUpdateCh, runTimerCh)
+	//go FloorArrivalFSM(floorArrival, currentElevatorFACh, elevatorUpdateCh, runTimerCh)
+	//go OrderExecutedFSM(timedOutCh, currentElevatorOECh, elevatorUpdateCh)
+
+	//go timer.RunTimer(runTimerCh, timedOutCh)
+
+	initializedElevator := Elevator{}
+	select {
+	case f :=<- floorArrival: // If the floor sensor registers a floor at initialization
+		initializedElevator.Floor = f
+		initializedElevator.MotorDirection = hardwareIO.MD_Stop
+		initializedElevator.Behaviour = EB_Idle
+		initializedElevator.Config.ClearOrdersVariant = CO_All
+		initializedElevator.Config.DoorOpenDurationSec = 3.0
+		elevatorUpdate <- initializedElevator
+		break
+	default: // If no floor is detected by the floor sensor
+		initializedElevator.Floor = -1
+		initializedElevator.MotorDirection = hardwareIO.MD_Down
+		hardwareIO.SetMotorDirection(hardwareIO.MD_Down)
+		initializedElevator.Behaviour = EB_Moving
+		initializedElevator.Config.ClearOrdersVariant = CO_All
+		initializedElevator.Config.DoorOpenDurationSec = 3.0
+		elevatorUpdate <- initializedElevator
+		break
+	}
 }
 
-func FSMOnInitBetweenFloors(){
-	io.SetMotorDirection(io.MD_Down)
-	runningElevator.MotorDirection = io.MD_Down
-	runningElevator.Behaviour = elevator.EB_Moving
+
+func UpdateElevatorInformation(currentElevatorNO chan<- Elevator, currentElevatorFA chan<- Elevator, currentElevatorOE chan<- Elevator, elevatorUpdate <-chan Elevator){
+	for{
+		select {
+		case e := <- elevatorUpdate:
+			printElevator(e)
+			currentElevatorNO <- e
+			currentElevatorFA <- e
+			currentElevatorOE <- e
+			break
+		default:
+			break
+		}
+
+	}
 }
 
-func setAllLights(){
-	for f := 0; f < elevator.NumFloors; f++{
-		for b := 0; b < elevator.NumButtons; b++ {
-			if runningElevator.Requests[f][b] != 0 {
-				io.SetButtonLamp(io.ButtonType(b), f, true)
+func setAllButtonLights(e Elevator){
+	for f := 0; f < hardwareIO.NumFloors; f++ {
+		for b := 0; b < hardwareIO.NumButtons; b++  {
+			if e.Orders[f][b] != 0 {
+				hardwareIO.SetButtonLamp(hardwareIO.ButtonType(b), f, true)
 			} else {
-				io.SetButtonLamp(io.ButtonType(b), f, true)
-
+				hardwareIO.SetButtonLamp(hardwareIO.ButtonType(b), f, false)
 			}
 		}
 	}
 }
 
-func ElevioButtonToString(btnType io.ButtonType) string {
-	switch btnType {
-	case io.BT_HallUp:
-		return "BT_HallUp"
-	case io.BT_HallDown:
-		return "BT_HallDown"
-	case io.BT_Cab:
-		return "BT_Cab"
+func NewOrderFSM(btnEvent <-chan hardwareIO.ButtonEvent, currentElevator <-chan Elevator, elevatorUpdate chan<- Elevator, timerDur chan<- float64){
+	localElevator := Elevator{}
+	for{
+		select {
+		case e := <- currentElevator:
+			localElevator = e
+		case bE := <- btnEvent:
+			hardwareIO.SetButtonLamp(bE.Button, bE.Floor, true)
+			switch localElevator.Behaviour{
+			case EB_DoorOpen:
+				if localElevator.Floor == bE.Floor {
+					timerDur <- localElevator.Config.DoorOpenDurationSec
+				} else {
+					localElevator.Orders[bE.Floor][int(bE.Button)] = 1
+				}
+				elevatorUpdate <- localElevator
+				break
+			case EB_Moving:
+				localElevator.Orders[bE.Floor][int(bE.Button)] = 1
+				elevatorUpdate <- localElevator
+				break
+			case EB_Idle:
+				if localElevator.Floor == bE.Floor {
+					hardwareIO.SetDoorOpenLamp(true)
+					timerDur <- localElevator.Config.DoorOpenDurationSec
+					localElevator.Behaviour = EB_DoorOpen
+					elevatorUpdate <- localElevator
+				} else {
+					localElevator.Orders[bE.Floor][int(bE.Button)] = 1
+					localElevator.MotorDirection = chooseDirection(localElevator)
+					hardwareIO.SetMotorDirection(localElevator.MotorDirection)
+					localElevator.Behaviour = EB_Moving
+					elevatorUpdate <- localElevator
+				}
+				break
+			}
+
+		default:
+			break
+		}
 	}
-	return "BT_Undefined"
 }
 
-func FSMOnRequestButtonPress(btnFloor int, btnType io.ButtonType){
-	fmt.Printf("\n \n %-2d", btnFloor)
-	fmt.Printf(" %-12.12s \n", ElevioButtonToString(btnType))
 
-	switch runningElevator.Behaviour {
-	case elevator.EB_DoorOpen:
-		if runningElevator.Floor == btnFloor {
-			timer.TimerStart(runningElevator.Config.DoorOpenDurationSec)
-		} else {
-			runningElevator.Requests[btnFloor][int(btnType)] = 1
+//NO
+func FloorArrivalFSM(floor <-chan int, currentElevator <-chan Elevator, elevatorUpdate chan<- Elevator, timerDur chan<- float64){
+	localElevator := Elevator{}
+	for{
+		select {
+		case e := <-currentElevator:
+			localElevator = e
+		case f := <- floor:
+			localElevator.Floor = f
+			hardwareIO.SetFloorIndicator(localElevator.Floor)
+			switch localElevator.Behaviour {
+			case EB_Moving:
+				if elevatorShouldStop(localElevator){
+					hardwareIO.SetMotorDirection(hardwareIO.MD_Stop)
+					hardwareIO.SetDoorOpenLamp(true)
+					localElevator = clearOrdersAtCurrentFloor(localElevator)
+					timerDur <- localElevator.Config.DoorOpenDurationSec
+					setAllButtonLights(localElevator)
+					localElevator.Behaviour = EB_DoorOpen
+					elevatorUpdate <- localElevator
+				} else if localElevator.Floor == 0{
+					localElevator.MotorDirection = hardwareIO.MD_Up
+					elevatorUpdate <- localElevator
+				} else if localElevator.Floor == 3 {
+					localElevator.MotorDirection = hardwareIO.MD_Down
+					elevatorUpdate <- localElevator
+				}
+
+				break
+			default:
+				break
+			}
+			setAllButtonLights(localElevator)
+		default:
+			break
 		}
-		break
-
-	case elevator.EB_Moving:
-		runningElevator.Requests[btnFloor][int(btnType)] = 1
-		break
-
-	case elevator.EB_Idle:
-		if runningElevator.Floor == btnFloor {
-			io.SetDoorOpenLamp(true)
-			timer.TimerStart(runningElevator.Config.DoorOpenDurationSec)
-			runningElevator.Behaviour = elevator.EB_DoorOpen
-		} else {
-			runningElevator.Requests[btnFloor][int(btnType)] = 1
-			runningElevator.MotorDirection = requests.RequestsChooseDirection(runningElevator)
-			io.SetMotorDirection(runningElevator.MotorDirection)
-		}
-		break
 	}
-	setAllLights()
-	fmt.Printf("\nNew state:\n")
-	elevator.ElevatorPrint(runningElevator)
 }
 
-func FSMOnFloorArrival(newFloor int){
-	//PRINT NEW FLOOR
-	fmt.Printf("\n \n New floor: %-2d \n",newFloor)
-	elevator.ElevatorPrint(runningElevator)
-
-	runningElevator.Floor = newFloor
-
-	io.SetFloorIndicator(runningElevator.Floor)
-
-	switch runningElevator.Behaviour {
-	case elevator.EB_Moving:
-		if requests.RequestsShouldStop(runningElevator){
-			io.SetMotorDirection(io.MD_Stop)
-			io.SetDoorOpenLamp(true)
-			runningElevator = requests.RequestsClearAtCurrentFloor(runningElevator)
-			timer.TimerStart(runningElevator.Config.DoorOpenDurationSec)
-			setAllLights()
-			runningElevator.Behaviour = elevator.EB_DoorOpen
+//OE
+func OrderExecutedFSM(timedOut <- chan bool, currentElevator <-chan Elevator, elevatorUpdate chan<- Elevator){
+	localElevator := Elevator{}
+	for {
+		select {
+		case e := <-currentElevator:
+			localElevator = e
+		case t := <-timedOut:
+			if t {
+				switch localElevator.Behaviour {
+				case EB_DoorOpen:
+					clearOrdersAtCurrentFloor(localElevator)
+					localElevator.MotorDirection = chooseDirection(localElevator)
+					hardwareIO.SetDoorOpenLamp(false)
+					hardwareIO.SetMotorDirection(localElevator.MotorDirection)
+					if localElevator.MotorDirection == hardwareIO.MD_Stop {
+						localElevator.Behaviour = EB_Idle
+					} else {
+						localElevator.Behaviour = EB_Moving
+					}
+					elevatorUpdate <- localElevator
+					break
+				default:
+					break
+				}
+			}
+		default:
+			break
 		}
-		break
-	default:
-		break
 	}
-	fmt.Println("\nNew state:")
-	elevator.ElevatorPrint(runningElevator)
-}
-
-func FSMOnDoorTimeout(){
-	elevator.ElevatorPrint(runningElevator)
-
-	switch runningElevator.Behaviour {
-	case elevator.EB_DoorOpen:
-		runningElevator.MotorDirection = requests.RequestsChooseDirection(runningElevator)
-
-		io.SetDoorOpenLamp(false)
-		io.SetMotorDirection(runningElevator.MotorDirection)
-
-		if runningElevator.MotorDirection == io.MD_Stop {
-			runningElevator.Behaviour = elevator.EB_Idle
-		} else {
-			runningElevator.Behaviour = elevator.EB_Moving
-		}
-
-		break
-	default:
-		break
-	}
-
-	fmt.Printf("\nNew state:\n")
-	elevator.ElevatorPrint(runningElevator)
 }

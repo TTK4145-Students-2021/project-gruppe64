@@ -1,30 +1,47 @@
 package timer
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
-//GetWallTime returns the current time in milliseconds
-func GetWallTime() float64{
-	timeNow := time.Now()
-	//timeSec := float64(timeNow.Second())
-	nano := float64(timeNow.UnixNano())
-	milli := nano/1000000 //milliseconds
-	return milli
+
+//duration in sec, here bug is. Will not start again since it is in sleep
+
+func RunTimer (timerDur <-chan float64, timedOut chan<- bool){
+	localTimerCh := make(chan bool)
+	timerRunning := false
+	stopTimerFromTimeOut := false
+
+	for {
+		select {
+		case tD :=<- timerDur:
+			if timerRunning{
+				stopTimerFromTimeOut = true
+				go startNewTimer(tD, localTimerCh)
+			} else {
+				timerRunning = true
+				go startNewTimer(tD, localTimerCh)
+			}
+		case lT := <- localTimerCh:
+			if lT {
+				if stopTimerFromTimeOut{
+					stopTimerFromTimeOut = false
+				} else {
+					timerRunning = false
+					timedOut <- true
+				}
+
+			}
+		default:
+			break
+		}
+	}
 }
 
-var TimerEndTime float64
-var TimerActive bool
-
-//timerStart takes in starts a timer , and puts the endtime for that timer into a channel, timerEndTime. It also states
-//that timerActive is true.
-func TimerStart (duration float64){
-	TimerEndTime = GetWallTime() + duration //duration must here be given in milliseconds.
-	TimerActive = true
-}
-
-//timerStop is used when we want the timer to stop being active.
-func TimerStop(){
-	TimerActive = false
-}
-func TimerTimedOut() bool{
-	return TimerActive  &&  GetWallTime() > TimerEndTime
+func startNewTimer(duration float64, localTimer chan<- bool){
+	fmt.Print("\n Timer started \n")
+	time.Sleep(time.Duration(duration)*time.Second)
+	fmt.Printf("\n Timer ended \n")
+	localTimer <- true
 }

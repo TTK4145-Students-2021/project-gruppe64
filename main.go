@@ -1,71 +1,75 @@
 package main
 
 import (
-	"realtimeProject/project-gruppe64/elevator"
+	"fmt"
 	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/io"
+	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/timer"
+	"runtime"
 )
-import "fmt"
 
-func main(){
+func main()  {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	numFloors := hardwareIO.NumFloors
+	hardwareIO.Init("localhost:15657", numFloors)
 
-	numFloors := elevator.NumFloors
+	drvButtons := make(chan hardwareIO.ButtonEvent)
+	drvFloors  := make(chan int)
+	drvObstr   := make(chan bool)
+	drvStop    := make(chan bool)
 
-	io.Init("localhost:15657", numFloors)
+	buttonCh := make(chan hardwareIO.ButtonEvent)
+	floorCh := make(chan int)
 
+	elevatorToNOCh := make(chan fsm.Elevator)
+	elevatorToFACh := make(chan fsm.Elevator)
+	elevatorToOECh := make(chan fsm.Elevator)
+	elevatorUpdateCh := make(chan fsm.Elevator)
 
-	var d io.MotorDirection = io.MD_Up
-	//elevio.SetMotorDirection(d)
+	runTimerCh := make(chan float64)
+	timedOutCh := make(chan bool)
 
-	drv_buttons := make(chan io.ButtonEvent)
-	drv_floors  := make(chan int)
-	drv_obstr   := make(chan bool)
-	drv_stop    := make(chan bool)
+	go hardwareIO.PollButtons(drvButtons)
+	go hardwareIO.PollFloorSensor(drvFloors)
+	go hardwareIO.PollObstructionSwitch(drvObstr)
+	go hardwareIO.PollStopButton(drvStop)
 
-	go io.PollButtons(drv_buttons)
-	go io.PollFloorSensor(drv_floors)
-	go io.PollObstructionSwitch(drv_obstr)
-	go io.PollStopButton(drv_stop)
-	fsm.Init()
+	go fsm.UpdateElevatorInformation(elevatorToNOCh, elevatorToFACh, elevatorToOECh, elevatorUpdateCh)
+	go fsm.NewOrderFSM(buttonCh, elevatorToNOCh, elevatorUpdateCh, runTimerCh)
+	go fsm.FloorArrivalFSM(floorCh, elevatorToFACh, elevatorUpdateCh, runTimerCh)
+	go fsm.OrderExecutedFSM(timedOutCh, elevatorToOECh, elevatorUpdateCh)
+
+	go timer.RunTimer(runTimerCh, timedOutCh)
+
+	fsm.InitializeElevator(floorCh, elevatorUpdateCh)
+
 
 	for {
-		if timer.TimerTimedOut(){
-			fsm.FSMOnDoorTimeout()
-			timer.TimerStop()
-		}
 		select {
-		case a := <- drv_buttons:
+		case a := <- drvButtons:
 			fmt.Printf("%+v\n", a)
-			io.SetButtonLamp(a.Button, a.Floor, true)
-			fsm.FSMOnRequestButtonPress(a.Floor, a.Button)
-
-		case a := <- drv_floors:
+			hardwareIO.SetButtonLamp(a.Button, a.Floor, true)
+			buttonCh <- a
+		case a := <- drvFloors:
 			fmt.Printf("%+v\n", a)
-			if a == numFloors-1 {
-				d = io.MD_Down
-				io.SetMotorDirection(d)
-			} else if a == 0 {
-				d = io.MD_Up
-				io.SetMotorDirection(d)
-			}
-
-			fsm.FSMOnFloorArrival(a)
-
-
-		case a := <- drv_obstr:
+			floorCh <- a
+			//if a == numFloors-1 {
+			//	hardwareIO.SetMotorDirection(hardwareIO.MD_Down)
+			//} else if a == 0 {
+			//	hardwareIO.SetMotorDirection(hardwareIO.MD_Up)
+			//}
+		case a := <- drvObstr:
 			fmt.Printf("%+v\n", a)
 			if a {
-				io.SetMotorDirection(io.MD_Stop)
+				hardwareIO.SetMotorDirection(hardwareIO.MD_Stop)
 			} else {
-				io.SetMotorDirection(d)
 			}
 
-		case a := <- drv_stop:
+		case a := <- drvStop:
 			fmt.Printf("%+v\n", a)
 			for f := 0; f < numFloors; f++ {
-				for b := io.ButtonType(0); b < 3; b++ {
-					io.SetButtonLamp(b, f, false)
+				for b := hardwareIO.ButtonType(0); b < 3; b++ {
+					hardwareIO.SetButtonLamp(b, f, false)
 				}
 			}
 		}
