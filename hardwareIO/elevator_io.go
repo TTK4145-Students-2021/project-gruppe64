@@ -88,7 +88,7 @@ func PollButtons(receiver chan<- ButtonEvent) {
 		time.Sleep(_pollRate)
 		for f := 0; f < _numFloors; f++ {
 			for b := ButtonType(0); b < 3; b++ {
-				v := getButton(b, f)
+				v := GetButton(b, f)
 				if v != prev[f][b] && v != false {
 					receiver <- ButtonEvent{f, ButtonType(b)}
 				}
@@ -135,7 +135,7 @@ func PollObstructionSwitch(receiver chan<- bool) {
 }
 
 
-func getButton(button ButtonType, floor int) bool {
+func GetButton(button ButtonType, floor int) bool {
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	_conn.Write([]byte{6, byte(button), byte(floor), 0})

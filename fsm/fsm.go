@@ -4,8 +4,6 @@ import (
 	"realtimeProject/project-gruppe64/hardwareIO"
 )
 
-
-
 func InitializeElevator(floorArrival <-chan int, elevatorUpdate chan<- Elevator){
 
 	//elevatorUpdateCh := make(chan Elevator)
@@ -29,8 +27,8 @@ func InitializeElevator(floorArrival <-chan int, elevatorUpdate chan<- Elevator)
 		initializedElevator.Floor = f
 		initializedElevator.MotorDirection = hardwareIO.MD_Stop
 		initializedElevator.Behaviour = EB_Idle
-		initializedElevator.Config.ClearOrdersVariant = CO_All
-		initializedElevator.Config.DoorOpenDurationSec = 3.0
+		initializedElevator.Config.ClearOrdersVariant = CO_InMotorDirection
+		initializedElevator.Config.DoorOpenDurationSec = 5.0
 		elevatorUpdate <- initializedElevator
 		break
 	default: // If no floor is detected by the floor sensor
@@ -38,8 +36,8 @@ func InitializeElevator(floorArrival <-chan int, elevatorUpdate chan<- Elevator)
 		initializedElevator.MotorDirection = hardwareIO.MD_Down
 		hardwareIO.SetMotorDirection(hardwareIO.MD_Down)
 		initializedElevator.Behaviour = EB_Moving
-		initializedElevator.Config.ClearOrdersVariant = CO_All
-		initializedElevator.Config.DoorOpenDurationSec = 3.0
+		initializedElevator.Config.ClearOrdersVariant = CO_InMotorDirection
+		initializedElevator.Config.DoorOpenDurationSec = 5.0
 		elevatorUpdate <- initializedElevator
 		break
 	}
