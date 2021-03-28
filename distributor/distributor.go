@@ -1,6 +1,9 @@
 package distributor
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/mail"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
 )
@@ -9,6 +12,9 @@ import (
 
 const (
 	maxPlaceOrderTries = 10
+	ownAddressPort = 19001 //endres ut i fra de ulike nodene
+	ownBroadcastPort = 19998
+	ownDesignatedPort = 19999
 )
 
 func initiateElevatorsOnNet() [3]elevatorIdentity {
@@ -17,6 +23,26 @@ func initiateElevatorsOnNet() [3]elevatorIdentity {
 	elevs[1] = elevatorIdentity{19002, 19999, 20002, fsm.Elevator{}}
 	elevs[2] = elevatorIdentity{19003, 20000,20003, fsm.Elevator{}}
 	return elevs
+}
+
+// https://mholt.github.io/json-to-go/
+type elevators struct{
+	hallOrders [][]bool
+	states struct{
+		elevatorOne struct{
+			behaviour string `json:"behaviour"`
+			floor int `json:"floor"`
+			motorDirection string  `json:"direction"`
+			orders []bool `json: ""`
+
+		}
+		elevatorTwo struct{
+
+		}
+		elevatorThree struct{
+
+	}
+	}
 }
 
 type elevatorIdentity struct {
@@ -37,12 +63,16 @@ type confirmationTimer struct{
 }
 
 func OrderDistributor(hallOrderCh <-chan hardwareIO.ButtonEvent, elevatorInformation <-chan fsm.Elevator){
-	elevators := initiateElevatorsOnNet()
+
 	for {
 		select {
 		case hallOrd := <-hallOrderCh:
 			//ISELIN
 			//Handle the hall order with designator module. Info om heisene ligger i elevators.
+			elevOne, _ := json.Marshal(elevators[0].elevatorInfo)
+			elevTwo, _ := json.Marshal(elevators[1].elevatorInfo)
+			elevThree, _ := json.Marshal(elevators[2].elevatorInfo)
+			fmt.Println("realtimeProject/project-gruppe64/designator/hall_request_assigner --input ")
 			//HG
 			//Etter det er håndtert, så skal det sendes over network
 		case elevInfo := <-elevatorInformation: //Kan være både
