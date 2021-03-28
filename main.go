@@ -11,14 +11,15 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	hardwareIO.Init("localhost:15657", hardwareIO.NumFloors)
 
-	buttonEventCh := make(chan hardwareIO.ButtonEvent)
+	cartButtonCh := make(chan hardwareIO.ButtonEvent)
+	hallOrderCh := make(chan hardwareIO.ButtonEvent)
 	floorArrivalCh := make(chan int)
 	timerDurationCh := make(chan float64)
 	timedOutCh := make(chan bool)
 
-	go hardwareIO.RunHardware(buttonEventCh, floorArrivalCh)
+	go hardwareIO.RunHardware(cartButtonCh, hallOrderCh, floorArrivalCh)
 	go timer.RunBlockingTimer(timerDurationCh, timedOutCh)
-	go fsm.ElevatorFSM(buttonEventCh, floorArrivalCh, timerDurationCh, timedOutCh)
+	go fsm.ElevatorFSM(cartButtonCh, floorArrivalCh, timerDurationCh, timedOutCh)
 	for {}
 
 }

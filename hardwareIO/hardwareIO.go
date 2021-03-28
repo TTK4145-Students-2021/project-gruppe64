@@ -10,7 +10,7 @@ const (
 )
 
 
-func RunHardware(buttonEvent chan<- ButtonEvent, floorArrival chan<- int)  {
+func RunHardware(cartButton chan<- ButtonEvent, hallOrder chan<- ButtonEvent, floorArrival chan<- int)  {
 
 	drvButtons := make(chan ButtonEvent)
 	drvFloors  := make(chan int)
@@ -27,7 +27,11 @@ func RunHardware(buttonEvent chan<- ButtonEvent, floorArrival chan<- int)  {
 		case a := <- drvButtons:
 			fmt.Printf("%+v\n", a)
 			SetButtonLamp(a.Button, a.Floor, true)
-			buttonEvent <- a
+			if a.Button == BT_Cab {
+				cartButton <- a
+			} else {
+				hallOrder <- a
+			}
 		case a := <- drvFloors:
 			fmt.Printf("%+v\n", a)
 			floorArrival <- a
