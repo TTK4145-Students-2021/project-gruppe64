@@ -9,6 +9,7 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	hardwareIO.Init("localhost:15657", hardwareIO.NumFloors)
 
 	buttonEventCh := make(chan hardwareIO.ButtonEvent)
 	floorArrivalCh := make(chan int)

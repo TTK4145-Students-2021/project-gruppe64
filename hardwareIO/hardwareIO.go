@@ -11,7 +11,6 @@ const (
 
 
 func RunHardware(buttonEvent chan<- ButtonEvent, floorArrival chan<- int)  {
-	Init("localhost:15657", NumFloors)
 
 	drvButtons := make(chan ButtonEvent)
 	drvFloors  := make(chan int)
