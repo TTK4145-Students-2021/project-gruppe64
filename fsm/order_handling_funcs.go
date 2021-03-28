@@ -109,6 +109,5 @@ func clearOrdersAtCurrentFloor(e Elevator) Elevator{
 			e.Orders[e.Floor][hardwareIO.BT_HallDown] = 0
 		}
 	}
-
 	return e
 }

@@ -34,10 +34,13 @@ func RunHardware(buttonEvent chan<- ButtonEvent, floorArrival chan<- int)  {
 			floorArrival <- a
 		case a := <- drvObstr:
 			fmt.Printf("%+v\n", a)
+			//if a {
+			//	SetMotorDirection(MD_Stop)
+			//} else {}
+		case a := <- drvStop:
 			if a {
 				SetMotorDirection(MD_Stop)
 			} else {}
-		case a := <- drvStop:
 			fmt.Printf("%+v\n", a)
 			for f := 0; f < NumFloors; f++ {
 				for b := ButtonType(0); b < 3; b++ {

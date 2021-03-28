@@ -4,7 +4,7 @@ import "time"
 
 //duration in sec, here bug is. Will not start again since it is in sleep
 
-func RunTimer (timerDur <-chan float64, timedOut chan<- bool) {
+func RunBlockingTimer (timerDur <-chan float64, timedOut chan<- bool) {
 	timerRunning := false
 	stopTimerFromTimeOut := false
 	for {

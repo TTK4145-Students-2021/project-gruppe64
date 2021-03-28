@@ -16,7 +16,7 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 		elevator.MotorDirection = hardwareIO.MD_Stop
 		elevator.Behaviour = EB_Idle
 		elevator.Config.ClearOrdersVariant = CO_InMotorDirection
-		elevator.Config.DoorOpenDurationSec = 5.0
+		elevator.Config.DoorOpenDurationSec = 3.0
 		break
 	default: // If no floor is detected by the floor sensor
 		elevator.Floor = -1
@@ -24,7 +24,7 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 		hardwareIO.SetMotorDirection(hardwareIO.MD_Down)
 		elevator.Behaviour = EB_Moving
 		elevator.Config.ClearOrdersVariant = CO_InMotorDirection
-		elevator.Config.DoorOpenDurationSec = 5.0
+		elevator.Config.DoorOpenDurationSec = 3.0
 		break
 	}
 
@@ -97,7 +97,7 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 					}
 					break
 				default:
-					fmt.Printf("\n Timer timed out but nothing happend.\n")
+					fmt.Printf("\n Timer timed out but nothing happend.:\n")
 					break
 				}
 			}
