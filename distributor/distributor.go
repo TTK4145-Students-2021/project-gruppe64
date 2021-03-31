@@ -21,11 +21,16 @@ func initiateElevatorsOnNet() [3]elevatorIdentity {
 	elevOneNums := []int{19001, 19998, 20001} // nr. 1 for IP-adresses, 2 for elevstructs to this, 3 for orders to this
 	elevTwoNums := []int{19002, 19999, 20002}
 	elevThreeNums := []int{19003, 20000, 20002}
+
 	var elevs [3]elevatorIdentity
 	elevs[0] = elevatorIdentity{19001, 19998, 19999, fsm.Elevator{}}
 	elevs[1] = elevatorIdentity{19002, 19999, 20002, fsm.Elevator{}}
 	elevs[2] = elevatorIdentity{19003, 20000,20003, fsm.Elevator{}}
 	return elevs
+}
+
+func updateElevatorStruct(elev fsm.Elevator) {
+	
 }
 
 // https://mholt.github.io/json-to-go/
