@@ -12,15 +12,12 @@ import (
 
 const (
 	maxPlaceOrderTries = 10
-	ownAddressPort = 19001 //endres ut i fra de ulike nodene
-	ownBroadcastPort = 19998
-	ownDesignatedPort = 19999
 )
 
 func initiateElevatorsOnNet() [3]elevatorIdentity {
 	elevOneNums := []int{19001, 19998, 20001} // nr. 1 for IP-adresses, 2 for elevstructs to this, 3 for orders to this
 	elevTwoNums := []int{19002, 19999, 20002}
-	elevThreeNums := []int{19003, 20000, 20002}
+	elevThreeNums := []int{19003, 20000, 20003}
 
 	var elevs [3]elevatorIdentity
 	elevs[0] = elevatorIdentity{19001, 19998, 19999, fsm.Elevator{}}
@@ -56,7 +53,7 @@ type elevators struct{
 			orders []bool `json: "cabRequests"`
 		}`json: "three"`
 	}
-}
+} //Flagg må være samme for at skal funke
 
 type elevatorIdentity struct {
 	addressPort int
@@ -75,20 +72,23 @@ type confirmationTimer struct{
 	count int
 }
 
-func OrderDistributor(hallOrderCh <-chan hardwareIO.ButtonEvent, elevatorInformation <-chan fsm.Elevator){
+// type orderToSend{
+// receivingElevatorID int
+// sendingElevatorID int
+// order int }
 
+func OrderDistributor(hallOrderCh <-chan hardwareIO.ButtonEvent, elevatorInformation <-chan fsm.Elevator){
 	for {
 		select {
 		case hallOrd := <-hallOrderCh:
-			//ISELIN
-			//Handle the hall order with designator module. Info om heisene ligger i elevators.
+
 			elevOne, _ := json.Marshal(elevators[0].elevatorInfo)
 			elevTwo, _ := json.Marshal(elevators[1].elevatorInfo)
 			elevThree, _ := json.Marshal(elevators[2].elevatorInfo)
 			fmt.Println("realtimeProject/project-gruppe64/designator/hall_request_assigner --input ")
-			//HG
-			//Etter det er håndtert, så skal det sendes over network
-		case elevInfo := <-elevatorInformation: //Kan være både
+			// Send til network chan for ordre: type orderToSend
+
+		case elevInfo := <-elevatorInformation: //Kommer som elevator struct, gjør om til json objekt for lagring (se struct for sending til designator)
 			testId := 0//Somehow check where this elevator is from.
 			for _, elev := range elevators { //checks for the id through the elevators list
 				if elev.elevatorID == testId {

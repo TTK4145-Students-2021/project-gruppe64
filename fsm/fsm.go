@@ -29,6 +29,7 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 	}
 
 	for{
+		 // til en eller annen kanal til network goroutine for broadcasting av elevator struct
 		select {
 		case btnE := <-buttonEvent:
 			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
