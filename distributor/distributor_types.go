@@ -7,7 +7,7 @@ import (
 
 //////////////////////////////////SKAL LIGGE I NETWORK/////////////////////////////////////////
 
-type OrderToSend struct{
+type SendingOrder struct{
 	receivingElevatorID int
 	sendingElevatorID int
 	order hardwareIO.ButtonEvent
@@ -36,9 +36,4 @@ type Elevators struct{
 	HallOrders [hardwareIO.NumFloors][2]bool `json:"hallRequests"`
 	States map[string]ElevatorTagged `json:"states"`
 }
-type elevatorCostCalculatedOrders struct {
-	elevatorCostOrders [hardwareIO.NumFloors][2]bool //Need json tags maybe (?)
-}
-type costCalculatedOrders struct {
-	allCostOrders [NumElevators]elevatorCostCalculatedOrders
-}
+

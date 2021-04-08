@@ -13,7 +13,7 @@ const (
 
 
 // GOROUTINE:
-func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, sendOrder chan<- OrderToSend, orderToSelf chan<- hardwareIO.ButtonEvent){
+func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, sendingOrderThroughNet chan<- SendingOrder, orderToSelf chan<- hardwareIO.ButtonEvent, messageTimer chan<- SendingOrder, messageTimedOut <-chan SendingOrder){
 	elevs := initiateElevators()
 	for {
 		select {
@@ -30,7 +30,9 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 			if designatedID == ElevatorID {
 				orderToSelf <- hallOrd
 			} else {
-				sendOrder <- OrderToSend{designatedID, ElevatorID, hallOrd}
+				sOrd := SendingOrder{designatedID, ElevatorID, hallOrd}
+				sendingOrderThroughNet <- sOrd
+				messageTimer <- sOrd
 				//her må timer for Plassert melding startes. Timer må også ha info om ordren.
 				//Når plassert kommer -> timer for ordren i seg selv må startes.
 				//Om ikke kommer -> ordren plasseres til en selv.
@@ -38,8 +40,7 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 				//Når timeren for ordren i seg selv går ut sjekkes det om den er slettet fra structen til den heisen.
 				//Om ordren fortsatt er der; ta den selv.
 			}
-
-			switch hallOrd.Button {
+			switch hallOrd.Button { //sletter ordren fra her og nå
 			case hardwareIO.BT_HallUp:
 				elevs.HallOrders[hallOrd.Floor][0] = false
 			case hardwareIO.BT_HallDown:
@@ -47,6 +48,8 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 			default:
 				break
 			}
+		case msgTimedOut := <- messageTimedOut: //Om timer gått ut, tar ordren selv
+			orderToSelf <- msgTimedOut.order
 
 		case elevInfo := <-elevatorInfo:
 			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
