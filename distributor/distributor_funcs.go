@@ -86,3 +86,23 @@ func getDesignatedElevatorID(elevs Elevators) int {
 	}
 	return -1
 }
+
+
+func checkIfOrderExecuted(elev ElevatorInformation, ord SendingOrder) bool {
+	if elev.Orders[ord.order.Floor][ord.order.Button] == 1 {
+		return false
+	} else {
+		return true
+	}
+
+}
+
+func removeExecutedOrders(elev ElevatorInformation, distributedOrds []SendingOrder) []SendingOrder{
+	var updatedDistributedOrds []SendingOrder
+	for _, dOrds := range distributedOrds{
+		if !checkIfOrderExecuted(elev, dOrds){
+			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)
+		}
+	}
+	return updatedDistributedOrds
+}

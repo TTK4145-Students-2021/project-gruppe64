@@ -13,8 +13,9 @@ const (
 
 
 // GOROUTINE:
-func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, sendingOrderThroughNet chan<- SendingOrder, orderToSelf chan<- hardwareIO.ButtonEvent, messageTimer chan<- SendingOrder, messageTimedOut <-chan SendingOrder){
+func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, sendingOrderThroughNet chan<- SendingOrder, orderToSelf chan<- hardwareIO.ButtonEvent, messageTimer chan<- SendingOrder, messageTimerTimedOut <-chan SendingOrder, orderTimerTimedOut <- chan SendingOrder){
 	elevs := initiateElevators()
+	var distributedOrders map[string][]SendingOrder
 	for {
 		select {
 		case hallOrd := <-hallOrder:
@@ -33,12 +34,7 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 				sOrd := SendingOrder{designatedID, ElevatorID, hallOrd}
 				sendingOrderThroughNet <- sOrd
 				messageTimer <- sOrd
-				//her må timer for Plassert melding startes. Timer må også ha info om ordren.
-				//Når plassert kommer -> timer for ordren i seg selv må startes.
-				//Om ikke kommer -> ordren plasseres til en selv.
-
-				//Når timeren for ordren i seg selv går ut sjekkes det om den er slettet fra structen til den heisen.
-				//Om ordren fortsatt er der; ta den selv.
+				distributedOrders[strconv.Itoa(designatedID)] = append(designatedOrders[strconv.Itoa(designatedID)], sOrd)
 			}
 			switch hallOrd.Button { //sletter ordren fra her og nå
 			case hardwareIO.BT_HallUp:
@@ -48,10 +44,23 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 			default:
 				break
 			}
-		case msgTimedOut := <- messageTimedOut: //Om timer gått ut, tar ordren selv
+
+		case msgTimedOut := <- messageTimerTimedOut:
 			orderToSelf <- msgTimedOut.order
 
+		case ordTimedOut := <- orderTimerTimedOut:
+			for key, dOrds := range distributedOrders{
+				if key == strconv.Itoa(ordTimedOut.receivingElevatorID){
+					for _, dOrd := range dOrds{
+						if dOrd == ordTimedOut{
+							orderToSelf <- ordTimedOut.order
+						}
+					}
+				}
+			}
+
 		case elevInfo := <-elevatorInfo:
+			distributedOrders[strconv.Itoa(elevInfo.ID)] = removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)])
 			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 		}
 	}

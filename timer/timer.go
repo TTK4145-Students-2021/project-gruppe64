@@ -6,7 +6,8 @@ import (
 )
 
 const(
-	messageTimerDur = 1 //sek
+	messageTimerDuration = 1 //sek
+	orderTimerDuration = 60 //sek
 )
 
 func RunBlockingTimer (timerDur <-chan float64, timedOut chan<- bool) {
@@ -53,7 +54,7 @@ func RunBlockingTimer (timerDur <-chan float64, timedOut chan<- bool) {
 //send ordren når message timer startes (når ny melding sendes), og
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
-func RunMessageTimer(orderToMessageTimer <-chan distributor.SendingOrder, orderMessageTimedOut chan<- distributor.SendingOrder){
+func MessageTimer(orderToMessageTimer <-chan distributor.SendingOrder, messageTimerTimedOut chan<- distributor.SendingOrder){
 	timersRunningMap := map[distributor.SendingOrder]bool{}
 	for{
 		select {
@@ -63,14 +64,25 @@ func RunMessageTimer(orderToMessageTimer <-chan distributor.SendingOrder, orderM
 				delete(timersRunningMap, ord)
 			} else {
 				timersRunningMap[ord] = true //setter opp en timer her
-				time.AfterFunc(time.Duration(messageTimerDur)*time.Second, func() {
+				time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func() {
 					_, found = timersRunningMap[ord]
 					if found {
-						orderMessageTimedOut <- ord
+						messageTimerTimedOut <- ord
 						delete(timersRunningMap, ord)
 					}
 				})
 			}
+		}
+	}
+}
+
+func OrderTimer(orderToOrderTimer <-chan distributor.SendingOrder, orderTimerTimedOut chan<- distributor.SendingOrder){
+	for{
+		select {
+		case ord := <-orderToOrderTimer:
+			time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
+				orderTimerTimedOut <- ord
+			})
 		}
 	}
 }
