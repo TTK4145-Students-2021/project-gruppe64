@@ -1,11 +1,15 @@
 package sendandreceive
 
 import (
+	//"../../../../distributor"
+	"../../../../fsm2"
+	"../../../../hardwareIO"
+	"../bcast"
 	"../localip"
 	"../peers"
-	"../bcast"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -14,62 +18,51 @@ import (
 //  will be received as zero-values.
 
 type OrderToSend struct{
-	ReceivingElevatorID int
-	SendingElevatorID int
-	Order [2] int
+	ReceivingElevatorID string
+	SendingElevatorID string
+	Order hardwareIO.ButtonEvent
 }
 
-type Elevator struct {
-	ID     int
-	Floor int
-	MotorDirection int 		//egentlig hardwareIO.MotorDirection
-	Orders [3][4] int 		// egentlig [hardwareIO.NumFloors][hardwareIO.NumButtons] int
-	Behaviour string 		 //egentlig ElevatorBehaviour
-	//tenker og at vi kanskje kan drite i å sende configStructen
+
+//Denne funker, men må inkludere hardwareIO
+type ElevatorInformation struct {
+	ID             string
+	Floor          int
+	MotorDirection hardwareIO.MotorDirection
+	Orders         [hardwareIO.NumFloors][hardwareIO.NumButtons]int
+	Behaviour      fsm2.ElevatorBehaviour
 }
 
 //BroadcastElevator sends the struct of the elevator to a channel.
-func BroadcastElevator( e chan <- Elevator, elevator Elevator) {
-	
+func BroadcastElevator( e chan <- ElevatorInformation, elevator ElevatorInformation) {
 	for {
 		time.Sleep(1 * time.Second)
 		e <- elevator
 	}
+}
+func FSMElevatorToElevatorNetwork(elevator fsm2.Elevator, ID string) ElevatorInformation{
+	elevatorToSend := ElevatorInformation{}
+	elevatorToSend.ID = ID
+	elevatorToSend.Floor = elevator.Floor
+	elevatorToSend.MotorDirection = elevator.MotorDirection
+	elevatorToSend.Orders = elevator.Orders
+	elevatorToSend.Behaviour = elevator.Behaviour
+	return elevatorToSend
 }
 
 //assuming the order is consisting of int, int and [][]int where the first int is the ID of the elevator receiving
 //the order, the second int is the ID of the elevator sending the order and the third is the actual order.
 //SendOrder sends an order to another elevator 10 times.
 func SendOrder(placeOrder chan <- OrderToSend, order OrderToSend, update <- chan bool){
-	/*elevatorReceiver := order[0].(int)
-	port := 20000 + elevatorReceiver
-	localIP, err := localip.LocalIP()
-	if err != nil {
-		fmt.Println(err)
-		localIP = "DISCONNECTED"
-	}
-	bcast.Transmitter(port, localIP, update)
-	*/
-
 	for i := 0; i < 10; i++{
 		time.Sleep(1 * time.Second)
 		placeOrder <- order
-		 //turn into milliseconds or less when actually using it
+		//turn into milliseconds or less when actually using it
 	}
 }
 
 //SendAccept sends the order back to the elevator, to let it know that it takes the order.
 func SendAccept(acceptOrder chan <- OrderToSend, order OrderToSend) {
-	//elevatorReceiver := order[1].(int)
-	/*
-	port := 20000 + elevatorReceiver
-	localIP, err := localip.LocalIP()
-	if err != nil {
-		fmt.Println(err)
-		localIP = "DISCONNECTED"
-	}
-	*/
-	//go bcast.Transmitter(port, localIP, update)
 	acceptOrder <- order
 }
 
@@ -87,27 +80,51 @@ func UpdatePeer(elevatorID int) string{
 	return fmt.Sprintf("Elevator ID: %d, IP: %s-%d", elevatorID, localIP, os.Getpid())
 }
 
-func GetReceiverAndTransmitterPorts(elevatorID int, elevStructSent chan Elevator, orderSent chan OrderToSend, peerGet chan peers.PeerUpdate, 
-	orderToSend chan OrderToSend, elevatorToSend chan Elevator, peerTXEnable chan bool){
+
+func GetReceiverAndTransmitterPorts(elevID string, elevStructSent chan ElevatorInformation, orderSent chan OrderToSend, peerGet chan peers.PeerUpdate,
+	orderToSend chan OrderToSend, elevatorToSend chan ElevatorInformation, peerTXEnable chan bool,
+	orderBack chan OrderToSend, orderBackSent chan OrderToSend){ //the two last ones are to check that SendAccept work
+	elevatorID,err := strconv.Atoi(elevID)
+	if err != nil {
+		fmt.Println(err)
+	}
 	peerUpdate := UpdatePeer(elevatorID)
+
+	//Don't really think we need these two since we have IDs and ports but whatever
 	go peers.Receiver(19000, peerGet)
 	go peers.Transmitter(19000, peerUpdate, peerTXEnable)
+
+	//these are to send and receive ElevatorStructs
 	go bcast.Receiver(20000, elevStructSent)
 	go bcast.Transmitter(20000, elevatorToSend)
-	go bcast.Transmitter(2 + 20000, orderToSend) //
 
-	//go bcast.Receiver(elevatorID + 19997, elevStructSent)
-	go bcast.Receiver(elevatorID + 20000, orderSent)
+	//this is where the elevator will receive orders
+	go bcast.Receiver(20000+elevatorID, orderSent)
+	go bcast.Receiver(20000+elevatorID+1, orderBackSent) //To test acceptMessage
+
+
+
+
+	for elevatorIDs := 1; elevatorIDs < 4; elevatorIDs ++{//distributor.NumElevators+1; elevatorIDs++{ //Gjerne ha numElevators her.
+		if elevatorIDs == elevatorID{ //bytt til == for å sjekke på samme node
+			go bcast.Transmitter(20000 + elevatorIDs, orderToSend)
+			go bcast.Transmitter(20000 + elevatorIDs+1, orderBack) //To test AcceptMessage
+
+		}
+	}
+
 }
 
 //SendReceiveOrders states what happens when orders are sent and so on. This function is to be changed when everything
 //is finished of course, so that the different modules communicate with each other.
-func SendReceiveOrders(elevStructSent chan  Elevator, orderToSend chan OrderToSend, orderSent chan OrderToSend, peerUpdate <- chan peers. PeerUpdate){
+func SendReceiveOrders(elevStructSent chan  ElevatorInformation, orderSent chan OrderToSend,
+	peerUpdate <- chan peers. PeerUpdate, orderBack chan OrderToSend, orderBackSent chan OrderToSend){
+	//to siste er for å sjekke AcceptMessage
 	for {
 		select {
 		case p := <-peerUpdate:
-			//should save the different IP-adresses and elevatorIDs in some way. Maybe IP is not needed since we have
-			//designated listeningports? Don't know.
+			//should save the different IP-adresses and elevatorIDs in some way. IP is not really needed since we have
+			//designated listeningports
 			fmt.Printf("Peer update:\n")
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New) //don't feel like this is needed, so I removed it
@@ -120,9 +137,36 @@ func SendReceiveOrders(elevStructSent chan  Elevator, orderToSend chan OrderToSe
 		case b := <- orderSent:
 			//b should be saved in order designator module
 			fmt.Printf("Received: %#v\n", b)
-			//SendAccept(orderSent, b)
+			SendAccept(orderBack, b)
 
+
+		case c := <-orderBackSent:
+			fmt.Printf("The order: %#v was sent back!\n", c)
+			//This case is only for testing
 
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+//Denne funker, men får med config
+/*
+type ElevatorNetwork struct {
+	ID int
+	elevator fsm2.Elevator
+}
+
+func FSMElevatorToElevatorNetwork(elevator fsm2.Elevator, ID int) ElevatorNetwork{
+	elevatorToSend := ElevatorNetwork{}
+	elevatorToSend.ID = ID
+	elevatorToSend.elevator = elevator
+	return elevatorToSend
+}
+*/
