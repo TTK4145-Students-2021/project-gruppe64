@@ -1,28 +1,27 @@
 package distributor
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os/exec"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
-	"strings"
+	"strconv"
 )
 
-func initiateElevators() elevators{
-	elevs := elevators{}
-	tempElevs := [NumElevators]elevatorTagged{}
-	for count := 0; count < NumElevators; count ++ {
-		tempElevs[count-1] = elevatorTagged{} //Trenger json flag!
+func initiateElevators() Elevators{
+	elevs := Elevators{}
+	elevs.HallOrders = [hardwareIO.NumFloors][2]bool{}
+	var statesMap map[string]ElevatorTagged
+	for elevNum := 0; elevNum < NumElevators; elevNum ++ {
+		statesMap[strconv.Itoa(elevNum)] = ElevatorTagged{}
 	}
-	elevs.states = tempElevs
-	return elevators{}
+	elevs.States = statesMap
+	return elevs
 }
 
 
-func getUpdatedElevatorTagged(e ElevatorInformation) elevatorTagged{
+func getUpdatedElevatorTagged(e ElevatorInformation) ElevatorTagged{
 	var behaviourString string
 	switch e.Behaviour {
 	case fsm.EB_Idle:
@@ -55,36 +54,35 @@ func getUpdatedElevatorTagged(e ElevatorInformation) elevatorTagged{
 		}
 		indexCount += 1
 	}
-	return elevatorTagged{behaviourString, e.Floor, motorDirString, cabOrds}
+	return ElevatorTagged{behaviourString, e.Floor, motorDirString, cabOrds}
 }
 
 
-func getDesignatedElevatorID(elevs elevators) int { //HER BARE PRØVER JEG MEG FREM ALTSÅ, aner ikke om funker.
-	// Kun tatt hensyn til at nr 1 er heis 0 osv osv., ikke om en er av nett
-	elevsEncoded, _ := json.Marshal(elevs)
-	costCmd := exec.Command("cmd", "/C", "start", "powershell", "realtimeProject/project-gruppe64/designator/hall_request_assigner")
-	fmt.Println("realtimeProject/project-gruppe64/designator/hall_request_assigner --input '" + string(elevsEncoded) + "'") //printe det vi prøver å execute
-	//https://golang.org/pkg/os/exec/#Command
-	costCmd.Stdin = strings.NewReader( "--input '" + string(elevsEncoded) + "'")
-	var out bytes.Buffer
-	costCmd.Stdout = &out
-	err := costCmd.Run()
+func getDesignatedElevatorID(elevs Elevators) int {
+	elevsEncoded, err := json.Marshal(elevs)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var costOut costCalculatedOrders
-	err = json.Unmarshal(out.Bytes(), &costOut)
+	costCmd := exec.Command("./designatorTest/hall_request_assigner.exe", "--input",  string(elevsEncoded))
+	out, err := costCmd.Output()
 	if err != nil {
 		log.Fatal(err)
 	}
-	id := -1
-	for _, elevOrds := range costOut.allCostOrders {
-		id += 1
-		for _, ord := range elevOrds.elevatorCostOrders {
-			if ord[0] == true || ord[1] == true { //Hvis kalkulasjonen sier at heisen har fått ordren
-				return id
+	var costMap map[string][][]bool
+	err = json.Unmarshal(out, &costMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for key, data := range costMap {
+		for _, flr := range data {
+			if flr[0] == true || flr[1] == true { //Hvis kalkulasjonen sier at heisen har fått ordren
+				retID, err := strconv.Atoi(key)
+				if err != nil {
+					log.Fatal(err)
+				}
+				return retID
 			}
 		}
 	}
-	return id
+	return -1
 }

@@ -24,19 +24,18 @@ type ElevatorInformation struct{
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-type elevatorTagged struct  {
-	behaviour string `json:"behaviour"`
-	floor int `json:"floor"`
-	motorDirection string  `json:"direction"`
-	cabOrders [hardwareIO.NumFloors]bool `json:"cabRequests"`
+type ElevatorTagged struct  {
+	Behaviour string `json:"behaviour"`
+	Floor int `json:"floor"`
+	MotorDirection string  `json:"direction"`
+	CabOrders [hardwareIO.NumFloors]bool `json:"cabRequests"`
 }
 
 // https://mholt.github.io/json-to-go/
-type elevators struct{
-	hallOrders [hardwareIO.NumFloors][2]bool `json:"hallRequests"`
-	states [NumElevators]elevatorTagged `json:"states"`
+type Elevators struct{
+	HallOrders [hardwareIO.NumFloors][2]bool `json:"hallRequests"`
+	States map[string]ElevatorTagged `json:"states"`
 }
-
 type elevatorCostCalculatedOrders struct {
 	elevatorCostOrders [hardwareIO.NumFloors][2]bool //Need json tags maybe (?)
 }

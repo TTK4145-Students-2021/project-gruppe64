@@ -2,6 +2,7 @@ package distributor
 
 import (
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"strconv"
 )
 
 
@@ -19,9 +20,9 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 		case hallOrd := <-hallOrder:
 			switch hallOrd.Button {
 			case hardwareIO.BT_HallUp:
-				elevs.hallOrders[hallOrd.Floor][0] = true
+				elevs.HallOrders[hallOrd.Floor][0] = true
 			case hardwareIO.BT_HallDown:
-				elevs.hallOrders[hallOrd.Floor][1] = true
+				elevs.HallOrders[hallOrd.Floor][1] = true
 			default:
 				break
 			}
@@ -40,18 +41,17 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 
 			switch hallOrd.Button {
 			case hardwareIO.BT_HallUp:
-				elevs.hallOrders[hallOrd.Floor][0] = false
+				elevs.HallOrders[hallOrd.Floor][0] = false
 			case hardwareIO.BT_HallDown:
-				elevs.hallOrders[hallOrd.Floor][1] = false
+				elevs.HallOrders[hallOrd.Floor][1] = false
 			default:
 				break
 			}
 
-
 		case elevInfo := <-elevatorInfo:
-			elevs.states[elevInfo.ID] = getUpdatedElevatorTagged(elevInfo)
-			}
+			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 		}
 	}
 }
+
 
