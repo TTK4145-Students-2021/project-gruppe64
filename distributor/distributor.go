@@ -72,7 +72,7 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 	}
 }
 
-func orderOperationCheck(){
+func elevatorOperationCheck(){
 	//Sjekk ordrer som er kommet inn sist, er de like de andre for så så lenge? I så fall opererer ikke heisen. Også en timer på når akk
 	//den heisen mottok sist oppdatering. On lenge siden? tilsvarende som om de er like. Heisen opererer ikke.
 	//Tenk litt som timerene for order og message

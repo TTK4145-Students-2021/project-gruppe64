@@ -58,7 +58,7 @@ func getUpdatedElevatorTagged(e ElevatorInformation) ElevatorTagged{
 }
 
 
-func getDesignatedElevatorID(elevs ElevatorInformation) int {
+func getDesignatedElevatorID(elevs ElevatorsTagged) int {
 	elevsEncoded, errM := json.Marshal(elevs)
 	if errM != nil {
 		log.Fatal(errM)
