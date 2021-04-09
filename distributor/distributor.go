@@ -13,7 +13,7 @@ const (
 
 
 // GOROUTINE:
-func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, sendingOrderThroughNet chan<- SendingOrder, orderToSelf chan<- hardwareIO.ButtonEvent, messageTimer chan<- SendingOrder, messageTimerTimedOut <-chan SendingOrder, orderTimerTimedOut <- chan SendingOrder){
+func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, sendingOrderThroughNet chan<- SendingOrder, orderToSelf chan<- hardwareIO.ButtonEvent, messageTimer chan<- SendingOrder, messageTimerTimedOut <-chan SendingOrder, orderTimer chan<- SendingOrder, orderTimerTimedOut <- chan SendingOrder){
 	elevs := initiateElevators()
 	var distributedOrders map[string][]SendingOrder
 	for {
@@ -34,7 +34,8 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 				sOrd := SendingOrder{designatedID, ElevatorID, hallOrd}
 				sendingOrderThroughNet <- sOrd
 				messageTimer <- sOrd
-				distributedOrders[strconv.Itoa(designatedID)] = append(designatedOrders[strconv.Itoa(designatedID)], sOrd)
+				orderTimer <- sOrd
+				distributedOrders[strconv.Itoa(designatedID)] = append(distributedOrders[strconv.Itoa(designatedID)], sOrd)
 			}
 			switch hallOrd.Button { //sletter ordren fra her og nå
 			case hardwareIO.BT_HallUp:

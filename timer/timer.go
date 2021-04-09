@@ -10,30 +10,30 @@ const(
 	orderTimerDuration = 60 //sek
 )
 
-func RunBlockingTimer (timerDur <-chan float64, timedOut chan<- bool) {
+func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bool) {
 	timerRunning := false
 	stopTimerFromTimeOut := false
 	for {
 		select {
-		case tD := <-timerDur:
+		case dTD := <-doorTimerDuration:
 			if timerRunning {
 				stopTimerFromTimeOut = true
-				time.AfterFunc(time.Duration(tD)*time.Second, func() {
+				time.AfterFunc(time.Duration(dTD)*time.Second, func() {
 					if stopTimerFromTimeOut {
 						stopTimerFromTimeOut = false
 					} else {
 						timerRunning = false
-						timedOut <- true
+						doorTimerTimedOut <- true
 					}
 				})
 			} else {
 				timerRunning = true
-				time.AfterFunc(time.Duration(tD)*time.Second, func() {
+				time.AfterFunc(time.Duration(dTD)*time.Second, func() {
 					if stopTimerFromTimeOut {
 						stopTimerFromTimeOut = false
 					} else {
 						timerRunning = false
-						timedOut <- true
+						doorTimerTimedOut <- true
 					}
 				})
 			}
@@ -43,22 +43,17 @@ func RunBlockingTimer (timerDur <-chan float64, timedOut chan<- bool) {
 	}
 }
 
-//her må timer for Plassert melding startes. Timer må også ha info om ordren.
-//Når plassert kommer -> timer for ordren i seg selv må startes.
-//Om ikke kommer -> ordren plasseres til en selv.
 
-//Når timeren for ordren i seg selv går ut sjekkes det om den er slettet fra structen til den heisen.
-//Om ordren fortsatt er der; ta den selv.
 
 
 //send ordren når message timer startes (når ny melding sendes), og
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
-func MessageTimer(orderToMessageTimer <-chan distributor.SendingOrder, messageTimerTimedOut chan<- distributor.SendingOrder){
+func RunMessageTimer(messageTimer <-chan distributor.SendingOrder, messageTimerTimedOut chan<- distributor.SendingOrder){
 	timersRunningMap := map[distributor.SendingOrder]bool{}
 	for{
 		select {
-		case ord := <-orderToMessageTimer:
+		case ord := <-messageTimer:
 			_, found := timersRunningMap[ord]
 			if found{ //Om her så er casen at vi har mottatt accepted message
 				delete(timersRunningMap, ord)
@@ -76,10 +71,10 @@ func MessageTimer(orderToMessageTimer <-chan distributor.SendingOrder, messageTi
 	}
 }
 
-func OrderTimer(orderToOrderTimer <-chan distributor.SendingOrder, orderTimerTimedOut chan<- distributor.SendingOrder){
+func RunOrderTimer(orderTimer <-chan distributor.SendingOrder, orderTimerTimedOut chan<- distributor.SendingOrder){
 	for{
 		select {
-		case ord := <-orderToOrderTimer:
+		case ord := <-orderTimer:
 			time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
 				orderTimerTimedOut <- ord
 			})

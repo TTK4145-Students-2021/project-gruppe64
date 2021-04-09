@@ -7,7 +7,7 @@ import (
 
 
 
-func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan int, timerDuration chan<- float64, timedOut <-chan bool ){
+func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan int, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool ){
 	elevator := Elevator{}
 
 	select {
@@ -31,12 +31,12 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 	for{
 		 // til en eller annen kanal til network goroutine for broadcasting av elevator struct
 		select {
-		case btnE := <-buttonEvent:
+		case btnE := <-orderToSelf:
 			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
 			switch elevator.Behaviour{
 			case EB_DoorOpen:
 				if elevator.Floor == btnE.Floor {
-					timerDuration <- elevator.Config.DoorOpenDurationSec
+					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 				} else {
 					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				}
@@ -47,7 +47,7 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 			case EB_Idle:
 				if elevator.Floor == btnE.Floor {
 					hardwareIO.SetDoorOpenLamp(true)
-					timerDuration <- elevator.Config.DoorOpenDurationSec
+					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 					elevator.Behaviour = EB_DoorOpen
 				} else {
 					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
@@ -69,7 +69,7 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 					hardwareIO.SetMotorDirection(hardwareIO.MD_Stop)
 					hardwareIO.SetDoorOpenLamp(true)
 					elevator = clearOrdersAtCurrentFloor(elevator)
-					timerDuration <- elevator.Config.DoorOpenDurationSec
+					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 					setAllButtonLights(elevator)
 					elevator.Behaviour = EB_DoorOpen
 				} else if elevator.Floor == 0{
@@ -83,8 +83,8 @@ func ElevatorFSM(buttonEvent <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 				break
 			}
 			setAllButtonLights(elevator)
-		case tmdO := <-timedOut:
-			if tmdO {
+		case dTTimedOut := <-doorTimerTimedOut:
+			if dTTimedOut {
 				switch elevator.Behaviour {
 				case EB_DoorOpen:
 					clearOrdersAtCurrentFloor(elevator)
