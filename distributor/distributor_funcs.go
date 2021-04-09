@@ -12,7 +12,7 @@ import (
 func initiateElevators() Elevators{
 	elevs := Elevators{}
 	elevs.HallOrders = [hardwareIO.NumFloors][2]bool{}
-	var statesMap map[string]ElevatorTagged
+	statesMap :=  make(map[string]ElevatorTagged)
 	for elevNum := 0; elevNum < NumElevators; elevNum ++ {
 		statesMap[strconv.Itoa(elevNum)] = ElevatorTagged{}
 	}
@@ -59,26 +59,28 @@ func getUpdatedElevatorTagged(e ElevatorInformation) ElevatorTagged{
 
 
 func getDesignatedElevatorID(elevs Elevators) int {
-	elevsEncoded, err := json.Marshal(elevs)
-	if err != nil {
-		log.Fatal(err)
+	elevsEncoded, errM := json.Marshal(elevs)
+	if errM != nil {
+		log.Fatal(errM)
 	}
-	costCmd := exec.Command("./designatorTest/hall_request_assigner.exe", "--input",  string(elevsEncoded))
-	out, err := costCmd.Output()
-	if err != nil {
-		log.Fatal(err)
+	costCmd := exec.Command("./designator/hall_request_assigner.exe", "--input",  string(elevsEncoded))
+	out, errO := costCmd.Output()
+	if errO != nil {
+		log.Fatal(errO)
 	}
+
 	var costMap map[string][][]bool
-	err = json.Unmarshal(out, &costMap)
-	if err != nil {
-		log.Fatal(err)
+	errU := json.Unmarshal(out, &costMap)
+	if errU != nil {
+		log.Fatal(errU)
 	}
 	for key, data := range costMap {
+
 		for _, flr := range data {
 			if flr[0] == true || flr[1] == true { //Hvis kalkulasjonen sier at heisen har fått ordren
-				retID, err := strconv.Atoi(key)
-				if err != nil {
-					log.Fatal(err)
+				retID, errK := strconv.Atoi(key)
+				if errK != nil {
+					log.Fatal(errK)
 				}
 				return retID
 			}

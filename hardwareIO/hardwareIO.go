@@ -10,7 +10,7 @@ const (
 )
 
 
-func RunHardware(orderToSelf chan<- ButtonEvent, hallOrder chan<- ButtonEvent, floorArrival chan<- int)  {
+func RunHardware(orderToSelf chan<- ButtonEvent, hallOrder chan<- ButtonEvent, floorArrival chan<- int, obstructionEvent chan<- bool)  {
 
 	drvButtons := make(chan ButtonEvent)
 	drvFloors  := make(chan int)
@@ -37,10 +37,9 @@ func RunHardware(orderToSelf chan<- ButtonEvent, hallOrder chan<- ButtonEvent, f
 			floorArrival <- a
 		case a := <- drvObstr:
 			fmt.Printf("%+v\n", a)
-			//if a {
-			//	SetMotorDirection(MD_Stop)
-			//} else {}
+			obstructionEvent <- a
 		case a := <- drvStop:
+			// Can choose if implemented
 			if a {
 				SetMotorDirection(MD_Stop)
 			} else {}

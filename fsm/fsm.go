@@ -7,8 +7,9 @@ import (
 
 
 
-func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan int, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool ){
+func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool){
 	elevator := Elevator{}
+	obstruction := false
 
 	select {
 	case flrA :=<- floorArrival: // If the floor sensor registers a floor at initialization
@@ -29,9 +30,12 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 	}
 
 	for{
-		 // til en eller annen kanal til network goroutine for broadcasting av elevator struct
+
 		select {
 		case btnE := <-orderToSelf:
+			if obstruction{
+				break
+			}
 			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
 			switch elevator.Behaviour{
 			case EB_DoorOpen:
@@ -40,6 +44,7 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 				} else {
 					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				}
+
 				break
 			case EB_Moving:
 				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
@@ -60,6 +65,7 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 				fmt.Printf("\n Button was bushed but nothing happend. Undefined state.\n")
 				break
 			}
+			ownElevator <- elevator
 		case flrA := <-floorArrival:
 			elevator.Floor = flrA
 			hardwareIO.SetFloorIndicator(elevator.Floor)
@@ -76,6 +82,10 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 					elevator.MotorDirection = hardwareIO.MD_Up
 				} else if elevator.Floor == 3 {
 					elevator.MotorDirection = hardwareIO.MD_Down
+				} else if obstruction{
+					hardwareIO.SetMotorDirection(hardwareIO.MD_Stop)
+					hardwareIO.SetDoorOpenLamp(true)
+					elevator.Behaviour = EB_DoorOpen
 				}
 				break
 			default:
@@ -83,7 +93,11 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 				break
 			}
 			setAllButtonLights(elevator)
+			ownElevator <- elevator
 		case dTTimedOut := <-doorTimerTimedOut:
+			if obstruction{
+				break
+			}
 			if dTTimedOut {
 				switch elevator.Behaviour {
 				case EB_DoorOpen:
@@ -101,6 +115,14 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 					fmt.Printf("\n Timer timed out but nothing happend.:\n")
 					break
 				}
+			}
+			ownElevator <- elevator
+		case obstrE := <-obstructionEvent:
+			if obstrE{
+				obstruction = true
+			} else {
+				obstruction = false
+				doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 			}
 		default:
 			break

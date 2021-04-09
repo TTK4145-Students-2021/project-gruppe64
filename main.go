@@ -15,12 +15,16 @@ func main() {
 	orderToSelfCh := make(chan hardwareIO.ButtonEvent)
 	hallOrderCh := make(chan hardwareIO.ButtonEvent)
 	floorArrivalCh := make(chan int)
+	obstructionEventCh := make(chan bool)
 	doorTimerDurationCh := make(chan float64)
 	doorTimerTimedOutCh := make(chan bool)
+
+	ownElevatorCh := make(chan fsm.Elevator)
 
 	// skal være network... (typene definert der, ikke i distributor)
 	elevatorInfoCh := make(chan distributor.ElevatorInformation)
 	sendingOrderThroughNetCh := make(chan distributor.SendingOrder)
+
 	messageTimerCh := make(chan distributor.SendingOrder)
 	messageTimerTimedOutCh := make(chan distributor.SendingOrder)
 	orderTimerCh := make(chan distributor.SendingOrder)
@@ -32,10 +36,10 @@ func main() {
 	go timer.RunOrderTimer(orderTimerCh, orderTimerTimedOutCh)
 
 	// Hardware:
-	go hardwareIO.RunHardware(orderToSelfCh, hallOrderCh, floorArrivalCh)
+	go hardwareIO.RunHardware(orderToSelfCh, hallOrderCh, floorArrivalCh, obstructionEventCh)
 
-	go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, doorTimerDurationCh, doorTimerTimedOutCh)
-	go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh)
+	go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh, doorTimerDurationCh, doorTimerTimedOutCh)
+	go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, ownElevatorCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh)
 
 	for {}
 }
