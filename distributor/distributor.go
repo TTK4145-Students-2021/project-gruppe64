@@ -16,7 +16,7 @@ const (
 
 // GOROUTINE:
 func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-chan ElevatorInformation, ownElevator <-chan fsm.Elevator, sendingOrderThroughNet chan<- SendingOrder, orderToSelf chan<- hardwareIO.ButtonEvent, messageTimer chan<- SendingOrder, messageTimerTimedOut <-chan SendingOrder, orderTimer chan<- SendingOrder, orderTimerTimedOut <- chan SendingOrder){
-	elevs := initiateElevators()
+	elevs := initiateElevatorsTagged()
 	var distributedOrders map[string][]SendingOrder
 	for {
 		select {
@@ -70,6 +70,12 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 		}
 	}
+}
+
+func orderOperationCheck(){
+	//Sjekk ordrer som er kommet inn sist, er de like de andre for så så lenge? I så fall opererer ikke heisen. Også en timer på når akk
+	//den heisen mottok sist oppdatering. On lenge siden? tilsvarende som om de er like. Heisen opererer ikke.
+	//Tenk litt som timerene for order og message
 }
 
 

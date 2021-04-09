@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 
-func initiateElevators() Elevators{
-	elevs := Elevators{}
+func initiateElevatorsTagged() ElevatorsTagged{
+	elevs := ElevatorsTagged{}
 	elevs.HallOrders = [hardwareIO.NumFloors][2]bool{}
 	statesMap :=  make(map[string]ElevatorTagged)
 	for elevNum := 0; elevNum < NumElevators; elevNum ++ {
@@ -58,7 +58,7 @@ func getUpdatedElevatorTagged(e ElevatorInformation) ElevatorTagged{
 }
 
 
-func getDesignatedElevatorID(elevs Elevators) int {
+func getDesignatedElevatorID(elevs ElevatorInformation) int {
 	elevsEncoded, errM := json.Marshal(elevs)
 	if errM != nil {
 		log.Fatal(errM)
@@ -90,6 +90,7 @@ func getDesignatedElevatorID(elevs Elevators) int {
 }
 
 
+
 func checkIfOrderExecuted(elev ElevatorInformation, ord SendingOrder) bool {
 	if elev.Orders[ord.order.Floor][ord.order.Button] == 1 {
 		return false
@@ -108,3 +109,4 @@ func removeExecutedOrders(elev ElevatorInformation, distributedOrds []SendingOrd
 	}
 	return updatedDistributedOrds
 }
+

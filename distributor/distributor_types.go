@@ -31,7 +31,7 @@ type ElevatorTagged struct  {
 }
 
 // https://mholt.github.io/json-to-go/
-type Elevators struct{
+type ElevatorsTagged struct{
 	HallOrders [hardwareIO.NumFloors][2]bool `json:"hallRequests"`
 	States map[string]ElevatorTagged `json:"states"`
 }

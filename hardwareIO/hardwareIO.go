@@ -40,9 +40,10 @@ func RunHardware(orderToSelf chan<- ButtonEvent, hallOrder chan<- ButtonEvent, f
 			obstructionEvent <- a
 		case a := <- drvStop:
 			// Can choose if implemented
-			if a {
+			for a {
 				SetMotorDirection(MD_Stop)
-			} else {}
+				SetStopLamp(true)
+			}
 			fmt.Printf("%+v\n", a)
 			for f := 0; f < NumFloors; f++ {
 				for b := ButtonType(0); b < 3; b++ {

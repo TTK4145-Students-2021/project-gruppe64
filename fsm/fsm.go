@@ -131,6 +131,7 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 }
 
 
+
 func setAllButtonLights(e Elevator){
 	for f := 0; f < hardwareIO.NumFloors; f++ {
 		for b := 0; b < hardwareIO.NumButtons; b++  {
@@ -142,4 +143,6 @@ func setAllButtonLights(e Elevator){
 		}
 	}
 }
+
+
 
