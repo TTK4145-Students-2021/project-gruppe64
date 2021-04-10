@@ -4,49 +4,46 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
-	"realtimeProject/project-gruppe64/configuration"
-	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/network/sendandreceive"
+	"realtimeProject/project-gruppe64/system"
 	"strconv"
 )
 
-func initiateElevatorsTagged() ElevatorsTagged{
-	elevs := ElevatorsTagged{}
-	elevs.HallOrders = [configuration.NumFloors][2]bool{}
-	statesMap :=  make(map[string]ElevatorTagged)
-	for elevNum := 0; elevNum < configuration.NumElevators; elevNum ++ {
-		statesMap[strconv.Itoa(elevNum)] = ElevatorTagged{}
+func initiateElevatorsTagged() system.ElevatorsTagged{
+	elevs := system.ElevatorsTagged{}
+	elevs.HallOrders = [system.NumFloors][2]bool{}
+	statesMap :=  make(map[string]system.ElevatorTagged)
+	for elevNum := 0; elevNum < system.NumElevators; elevNum ++ {
+		statesMap[strconv.Itoa(elevNum)] = system.ElevatorTagged{}
 	}
 	elevs.States = statesMap
 	return elevs
 }
 
 
-func getUpdatedElevatorTagged(e sendandreceive.ElevatorInformation) ElevatorTagged{
+func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagged{
 	var behaviourString string
 	switch e.Behaviour {
-	case fsm.EB_Idle:
+	case system.EB_Idle:
 		behaviourString = "idle"
-	case fsm.EB_DoorOpen:
+	case system.EB_DoorOpen:
 		behaviourString = "doorOpen"
-	case fsm.EB_Moving:
+	case system.EB_Moving:
 		behaviourString = "moving"
 	default:
 		behaviourString = ""
 	}
 	var motorDirString string
 	switch e.MotorDirection {
-	case hardwareIO.MD_Up:
+	case system.MD_Up:
 		motorDirString = "up"
-	case hardwareIO.MD_Down:
+	case system.MD_Down:
 		motorDirString = "down"
-	case hardwareIO.MD_Stop:
+	case system.MD_Stop:
 		motorDirString = "stop"
 	default:
 		motorDirString = ""
 	}
-	cabOrds := [configuration.NumFloors]bool{}
+	cabOrds := [system.NumFloors]bool{}
 	indexCount := 0
 	for _, f := range e.Orders{
 		if f[2] == 0{ //Tror dette er cab knappen i matrisen (?) litt usikker
@@ -56,11 +53,11 @@ func getUpdatedElevatorTagged(e sendandreceive.ElevatorInformation) ElevatorTagg
 		}
 		indexCount += 1
 	}
-	return ElevatorTagged{behaviourString, e.Floor, motorDirString, cabOrds}
+	return system.ElevatorTagged{behaviourString, e.Floor, motorDirString, cabOrds}
 }
 
 
-func getDesignatedElevatorID(elevs ElevatorsTagged) int {
+func getDesignatedElevatorID(elevs system.ElevatorsTagged) int {
 	elevsEncoded, errM := json.Marshal(elevs)
 	if errM != nil {
 		log.Fatal(errM)
@@ -93,7 +90,7 @@ func getDesignatedElevatorID(elevs ElevatorsTagged) int {
 
 
 
-func checkIfOrderExecuted(elev sendandreceive.ElevatorInformation, ord sendandreceive.SendingOrder) bool {
+func checkIfOrderExecuted(elev system.ElevatorInformation, ord system.SendingOrder) bool {
 	if elev.Orders[ord.Order.Floor][ord.Order.Button] == 1 {
 		return false
 	} else {
@@ -102,8 +99,8 @@ func checkIfOrderExecuted(elev sendandreceive.ElevatorInformation, ord sendandre
 
 }
 
-func removeExecutedOrders(elev sendandreceive.ElevatorInformation, distributedOrds []sendandreceive.SendingOrder) []sendandreceive.SendingOrder{
-	var updatedDistributedOrds []sendandreceive.SendingOrder
+func removeExecutedOrders(elev system.ElevatorInformation, distributedOrds []system.SendingOrder) []system.SendingOrder{
+	var updatedDistributedOrds []system.SendingOrder
 	for _, dOrds := range distributedOrds{
 		if !checkIfOrderExecuted(elev, dOrds){
 			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)

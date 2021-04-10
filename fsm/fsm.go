@@ -3,28 +3,29 @@ package fsm
 import (
 	"fmt"
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"realtimeProject/project-gruppe64/system"
 )
 
 
 
-func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool){
-	elevator := Elevator{}
+func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- system.Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool){
+	elevator := system.Elevator{}
 	obstruction := false
 
 	select {
 	case flrA :=<- floorArrival: // If the floor sensor registers a floor at initialization
 		elevator.Floor = flrA
-		elevator.MotorDirection = hardwareIO.MD_Stop
-		elevator.Behaviour = EB_Idle
-		elevator.Config.ClearOrdersVariant = CO_InMotorDirection
+		elevator.MotorDirection = system.MD_Stop
+		elevator.Behaviour = system.EB_Idle
+		elevator.Config.ClearOrdersVariant = system.CO_InMotorDirection
 		elevator.Config.DoorOpenDurationSec = 3.0
 		break
 	default: // If no floor is detected by the floor sensor
 		elevator.Floor = -1
-		elevator.MotorDirection = hardwareIO.MD_Down
-		hardwareIO.SetMotorDirection(hardwareIO.MD_Down)
-		elevator.Behaviour = EB_Moving
-		elevator.Config.ClearOrdersVariant = CO_InMotorDirection
+		elevator.MotorDirection = system.MD_Down
+		hardwareIO.SetMotorDirection(system.MD_Down)
+		elevator.Behaviour = system.EB_Moving
+		elevator.Config.ClearOrdersVariant = system.CO_InMotorDirection
 		elevator.Config.DoorOpenDurationSec = 3.0
 		break
 	}
@@ -38,7 +39,7 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 			}
 			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
 			switch elevator.Behaviour{
-			case EB_DoorOpen:
+			case system.EB_DoorOpen:
 				if elevator.Floor == btnE.Floor {
 					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 				} else {
@@ -46,19 +47,19 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 				}
 
 				break
-			case EB_Moving:
+			case system.EB_Moving:
 				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				break
-			case EB_Idle:
+			case system.EB_Idle:
 				if elevator.Floor == btnE.Floor {
 					hardwareIO.SetDoorOpenLamp(true)
 					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
-					elevator.Behaviour = EB_DoorOpen
+					elevator.Behaviour = system.EB_DoorOpen
 				} else {
 					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 					elevator.MotorDirection = chooseDirection(elevator)
 					hardwareIO.SetMotorDirection(elevator.MotorDirection)
-					elevator.Behaviour = EB_Moving
+					elevator.Behaviour = system.EB_Moving
 				}
 				break
 			default:
@@ -70,22 +71,22 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 			elevator.Floor = flrA
 			hardwareIO.SetFloorIndicator(elevator.Floor)
 			switch elevator.Behaviour {
-			case EB_Moving:
+			case system.EB_Moving:
 				if elevatorShouldStop(elevator){
-					hardwareIO.SetMotorDirection(hardwareIO.MD_Stop)
+					hardwareIO.SetMotorDirection(system.MD_Stop)
 					hardwareIO.SetDoorOpenLamp(true)
 					elevator = clearOrdersAtCurrentFloor(elevator)
 					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 					setAllButtonLights(elevator)
-					elevator.Behaviour = EB_DoorOpen
+					elevator.Behaviour = system.EB_DoorOpen
 				} else if elevator.Floor == 0{
-					elevator.MotorDirection = hardwareIO.MD_Up
+					elevator.MotorDirection = system.MD_Up
 				} else if elevator.Floor == 3 {
-					elevator.MotorDirection = hardwareIO.MD_Down
+					elevator.MotorDirection = system.MD_Down
 				} else if obstruction{
-					hardwareIO.SetMotorDirection(hardwareIO.MD_Stop)
+					hardwareIO.SetMotorDirection(system.MD_Stop)
 					hardwareIO.SetDoorOpenLamp(true)
-					elevator.Behaviour = EB_DoorOpen
+					elevator.Behaviour = system.EB_DoorOpen
 				}
 				break
 			default:
@@ -100,15 +101,15 @@ func ElevatorFSM(orderToSelf <-chan hardwareIO.ButtonEvent, floorArrival <-chan 
 			}
 			if dTTimedOut {
 				switch elevator.Behaviour {
-				case EB_DoorOpen:
+				case system.EB_DoorOpen:
 					clearOrdersAtCurrentFloor(elevator)
 					elevator.MotorDirection = chooseDirection(elevator)
 					hardwareIO.SetDoorOpenLamp(false)
 					hardwareIO.SetMotorDirection(elevator.MotorDirection)
-					if elevator.MotorDirection == hardwareIO.MD_Stop {
-						elevator.Behaviour = EB_Idle
+					if elevator.MotorDirection == system.MD_Stop {
+						elevator.Behaviour = system.EB_Idle
 					} else {
-						elevator.Behaviour = EB_Moving
+						elevator.Behaviour = system.EB_Moving
 					}
 					break
 				default:

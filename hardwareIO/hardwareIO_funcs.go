@@ -3,9 +3,17 @@ package hardwareIO
 import (
 	"fmt"
 	"net"
+	"realtimeProject/project-gruppe64/system"
 	"sync"
 	"time"
 )
+
+const _pollRate = 20 * time.Millisecond
+
+var _initialized bool = false
+var _numFloors int = 4
+var _mtx sync.Mutex
+var _conn net.Conn
 
 func Init(addr string, numFloors int) {
 	if _initialized {
@@ -22,13 +30,13 @@ func Init(addr string, numFloors int) {
 	_initialized = true
 }
 
-func SetMotorDirection(dir MotorDirection) {
+func SetMotorDirection(dir system.MotorDirection) {
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	_conn.Write([]byte{1, byte(dir), 0, 0})
 }
 
-func SetButtonLamp(button ButtonType, floor int, value bool) {
+func SetButtonLamp(button system.ButtonType, floor int, value bool) {
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	_conn.Write([]byte{2, byte(button), byte(floor), toByte(value)})
@@ -54,15 +62,15 @@ func SetStopLamp(value bool) {
 
 
 
-func PollButtons(receiver chan<- ButtonEvent) {
+func PollButtons(receiver chan<- system.ButtonEvent) {
 	prev := make([][3]bool, _numFloors)
 	for {
 		time.Sleep(_pollRate)
 		for f := 0; f < _numFloors; f++ {
-			for b := ButtonType(0); b < 3; b++ {
+			for b := system.ButtonType(0); b < 3; b++ {
 				v := GetButton(b, f)
 				if v != prev[f][b] && v != false {
-					receiver <- ButtonEvent{f, ButtonType(b)}
+					receiver <- system.ButtonEvent{f, system.ButtonType(b)}
 				}
 				prev[f][b] = v
 			}
@@ -107,7 +115,7 @@ func PollObstructionSwitch(receiver chan<- bool) {
 }
 
 
-func GetButton(button ButtonType, floor int) bool {
+func GetButton(button system.ButtonType, floor int) bool {
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	_conn.Write([]byte{6, byte(button), byte(floor), 0})

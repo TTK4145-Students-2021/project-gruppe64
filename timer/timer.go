@@ -1,7 +1,7 @@
 package timer
 
 import (
-	"realtimeProject/project-gruppe64/network/sendandreceive"
+	"realtimeProject/project-gruppe64/system"
 	"time"
 )
 
@@ -49,8 +49,8 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 //send ordren når message timer startes (når ny melding sendes), og
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
-func RunMessageTimer(messageTimer <-chan sendandreceive.SendingOrder, messageTimerTimedOut chan<- sendandreceive.SendingOrder){
-	timersRunningMap := map[sendandreceive.SendingOrder]bool{}
+func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder){
+	timersRunningMap := map[system.SendingOrder]bool{}
 	for{
 		select {
 		case ord := <-messageTimer:
@@ -71,7 +71,7 @@ func RunMessageTimer(messageTimer <-chan sendandreceive.SendingOrder, messageTim
 	}
 }
 
-func RunOrderTimer(orderTimer <-chan sendandreceive.SendingOrder, orderTimerTimedOut chan<- sendandreceive.SendingOrder){
+func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut chan<- system.SendingOrder){
 	for{
 		select {
 		case ord := <-orderTimer:

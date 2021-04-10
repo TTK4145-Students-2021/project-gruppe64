@@ -3,11 +3,9 @@ package sendandreceive
 import (
 	"fmt"
 	"os"
-	"realtimeProject/project-gruppe64/configuration"
-	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/network/bcast"
 	"realtimeProject/project-gruppe64/network/localip"
+	"realtimeProject/project-gruppe64/system"
 	"time"
 )
 
@@ -15,21 +13,6 @@ import (
 // Note that all members we want to transmit must be public. Any private members
 //  will be received as zero-values.
 
-type SendingOrder struct{
-	ReceivingElevatorID int
-	SendingElevatorID int
-	Order hardwareIO.ButtonEvent
-}
-
-
-//Denne funker, men må inkludere hardwareIO
-type ElevatorInformation struct {
-	ID             int
-	Floor          int
-	MotorDirection hardwareIO.MotorDirection
-	Orders         [configuration.NumFloors][configuration.NumButtons]int
-	Behaviour      fsm.ElevatorBehaviour
-}
 
 /*
 func BroadcastElevator( e chan <- ElevatorInformation, elevator ElevatorInformation, buttonEvent chan <- hardwareIO.ButtonEvent) {
@@ -42,19 +25,19 @@ func BroadcastElevator( e chan <- ElevatorInformation, elevator ElevatorInformat
  */
 
 //broadcastElevator sends the struct of the elevator to a channel.
-func broadcastElevator(elevatorInfo chan <- ElevatorInformation,  elevator  fsm.Elevator) {
+func broadcastElevator(elevatorInfo chan <- system.ElevatorInformation,  elevator  system.Elevator) {
 	//fsmElevator := <- elevator
 	e := fsmElevatorToElevatorNetwork(elevator)
 	elevatorInfo <- e
 }
 
-func sendOtherElevators(elevatorInfo chan <- ElevatorInformation,  otherElevator ElevatorInformation) {
+func sendOtherElevators(elevatorInfo chan <- system.ElevatorInformation,  otherElevator system.ElevatorInformation) {
 	elevatorInfo <- otherElevator
 }
 
-func fsmElevatorToElevatorNetwork(elevator fsm.Elevator) ElevatorInformation {
-	elevatorToSend := ElevatorInformation{}
-	elevatorToSend.ID = configuration.ElevatorID
+func fsmElevatorToElevatorNetwork(elevator system.Elevator) system.ElevatorInformation {
+	elevatorToSend := system.ElevatorInformation{}
+	elevatorToSend.ID = system.ElevatorID
 	elevatorToSend.Floor = elevator.Floor
 	elevatorToSend.MotorDirection = elevator.MotorDirection
 	elevatorToSend.Orders = elevator.Orders
@@ -67,7 +50,7 @@ func fsmElevatorToElevatorNetwork(elevator fsm.Elevator) ElevatorInformation {
 //SendOrder sends an order to another elevator 10 times.
 
 //får sendingOrderThroughNet fra distributor, plasserer den i en annen nettverksmodul.
-func sendOrder(placeOrder chan <- SendingOrder, sendingOrderThroughNet SendingOrder){
+func sendOrder(placeOrder chan <- system.SendingOrder, sendingOrderThroughNet system.SendingOrder){
 	for i := 0; i < 10; i++{
 		time.Sleep(1 * time.Millisecond)
 		placeOrder <- sendingOrderThroughNet
@@ -81,8 +64,8 @@ func sendAcceptMessage (acceptOrder chan <- SendingOrder, sendAcceptThroughNet S
 }
 */
 
-func sendOrderMessage (orderToMessageTimer chan <- SendingOrder, acceptOrder chan <- SendingOrder, order SendingOrder){
-	if order.SendingElevatorID == configuration.ElevatorID{//Fordi den sender vel ikke seg selv melding? Kanskje
+func sendOrderMessage (orderToMessageTimer chan <- system.SendingOrder, acceptOrder chan <- system.SendingOrder, order system.SendingOrder){
+	if order.SendingElevatorID == system.ElevatorID { //Fordi den sender vel ikke seg selv melding? Kanskje
 		orderToMessageTimer <- order
 		return
 	}
@@ -105,8 +88,8 @@ func UpdatePeer(elevatorID int) string{
 }
 
 
-func GetReceiverAndTransmitterPorts(othersElevatorInfo  chan ElevatorInformation, placedOrder chan SendingOrder,
-	placeOrder chan SendingOrder, elevatorInfo chan ElevatorInformation){
+func GetReceiverAndTransmitterPorts(othersElevatorInfo  chan system.ElevatorInformation, placedOrder chan system.SendingOrder,
+	placeOrder chan system.SendingOrder, elevatorInfo chan system.ElevatorInformation){
 	//peerGet chan peers.PeerUpdate, peerTXEnable chan bool, orderBack chan SendingOrder, orderBackSent chan SendingOrder){ //the two last ones are to check that SendAccept work
 
 	//peerUpdate := UpdatePeer(fsm.ElevatorID)
@@ -120,22 +103,22 @@ func GetReceiverAndTransmitterPorts(othersElevatorInfo  chan ElevatorInformation
 	go bcast.Transmitter(60000, elevatorInfo)
 
 	//this is where the elevator will receive orders
-	go bcast.Receiver(60001+configuration.ElevatorID, placeOrder)
+	go bcast.Receiver(60001+system.ElevatorID, placeOrder)
 	//go bcast.Receiver(60001+elevatorID+1, orderBackSent) //To test acceptMessage
 
-	for elevatorIDs := 0; elevatorIDs < configuration.NumElevators; elevatorIDs ++{//distributor.NumElevators+1; elevatorIDs++{ //Gjerne ha numElevators her.
-		if elevatorIDs != configuration.ElevatorID{ //bytt til == for å sjekke på samme node
-			go bcast.Transmitter(60001 + configuration.ElevatorID, placedOrder)
+	for elevatorIDs := 0; elevatorIDs < system.NumElevators; elevatorIDs ++{ //distributor.NumElevators+1; elevatorIDs++{ //Gjerne ha numElevators her.
+		if elevatorIDs != system.ElevatorID { //bytt til == for å sjekke på samme node
+			go bcast.Transmitter(60001 +system.ElevatorID, placedOrder)
 			//go bcast.Transmitter(60001 + elevatorIDs+1, orderBack) //To test AcceptMessage
 
 		}
 	}
 
 }
-func SendReceiveOrders(elevator <- chan fsm.Elevator, otherElevatorInfo <- chan ElevatorInformation, //peerUpdate <- chan peers.PeerUpdate,
-	sendingOrderThroughNet <- chan SendingOrder, placedOrder <- chan SendingOrder,
-	elevatorInfo chan <- ElevatorInformation, placeOrder chan <- SendingOrder,
-	acceptOrder chan <- SendingOrder, messageTimer chan <- SendingOrder) {
+func SendReceiveOrders(elevator <- chan system.Elevator, otherElevatorInfo <- chan system.ElevatorInformation, //peerUpdate <- chan peers.PeerUpdate,
+	sendingOrderThroughNet <- chan system.SendingOrder, placedOrder <- chan system.SendingOrder,
+	elevatorInfo chan <- system.ElevatorInformation, placeOrder chan <- system.SendingOrder,
+	acceptOrder chan <- system.SendingOrder, messageTimer chan <- system.SendingOrder) {
 	for {
 		select {
 		/*

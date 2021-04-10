@@ -1,4 +1,4 @@
-package configuration
+package system
 
 const (
 	NumFloors = 4

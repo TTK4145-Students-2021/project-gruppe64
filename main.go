@@ -1,41 +1,41 @@
 package main
 
 import (
-	"realtimeProject/project-gruppe64/configuration"
 	"realtimeProject/project-gruppe64/distributor"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/network/sendandreceive"
+	"realtimeProject/project-gruppe64/system"
 	"realtimeProject/project-gruppe64/timer"
 	"runtime"
 )
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	hardwareIO.Init("localhost:15657", configuration.NumFloors)
+	hardwareIO.Init("localhost:15657", system.NumFloors)
 
-	orderToSelfCh := make(chan hardwareIO.ButtonEvent)
-	hallOrderCh := make(chan hardwareIO.ButtonEvent)
+	orderToSelfCh := make(chan system.ButtonEvent)
+	hallOrderCh := make(chan system.ButtonEvent)
 	floorArrivalCh := make(chan int)
 	obstructionEventCh := make(chan bool)
 	doorTimerDurationCh := make(chan float64)
 	doorTimerTimedOutCh := make(chan bool)
 
-	ownElevatorCh := make(chan fsm.Elevator)
+	ownElevatorCh := make(chan system.Elevator)
 
 	//Network channels
-	sendingOrderThroughNetCh := make(chan sendandreceive.SendingOrder) //channel that receives
-	placedOrderCh := make(chan sendandreceive.SendingOrder) //output from another network module into other network module
-	elevatorInfoCh := make(chan sendandreceive.ElevatorInformation) //channel with elevatorinformation, sent from networkmodule to
+	sendingOrderThroughNetCh := make(chan system.SendingOrder) //channel that receives
+	placedOrderCh := make(chan system.SendingOrder) //output from another network module into other network module
+	elevatorInfoCh := make(chan system.ElevatorInformation) //channel with elevatorinformation, sent from networkmodule to
 	//own modules
-	othersElevatorInfoCh := make(chan sendandreceive.ElevatorInformation)
-	placeOrderCh := make(chan sendandreceive.SendingOrder) //sent from this networkmodule to other network module
-	acceptOrderCh := make(chan sendandreceive.SendingOrder) //sent from this networkmodule to other network module
+	othersElevatorInfoCh := make(chan system.ElevatorInformation)
+	placeOrderCh := make(chan system.SendingOrder) //sent from this networkmodule to other network module
+	acceptOrderCh := make(chan system.SendingOrder) //sent from this networkmodule to other network module
 
-	messageTimerCh := make(chan sendandreceive.SendingOrder)
-	messageTimerTimedOutCh := make(chan sendandreceive.SendingOrder)
-	orderTimerCh := make(chan sendandreceive.SendingOrder)
-	orderTimerTimedOutCh := make(chan sendandreceive.SendingOrder)
+	messageTimerCh := make(chan system.SendingOrder)
+	messageTimerTimedOutCh := make(chan system.SendingOrder)
+	orderTimerCh := make(chan system.SendingOrder)
+	orderTimerTimedOutCh := make(chan system.SendingOrder)
 
 	// Timers:
 	go timer.RunDoorTimer(doorTimerDurationCh, doorTimerTimedOutCh)
