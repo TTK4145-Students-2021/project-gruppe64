@@ -65,7 +65,7 @@ func getDesignatedElevatorID(elevs ElevatorsTagged) int {
 	if errM != nil {
 		log.Fatal(errM)
 	}
-	costCmd := exec.Command("./designator/hall_request_assigner.exe", "--input",  string(elevsEncoded))
+	costCmd := exec.Command("./distributor/hall_request_assigner.exe", "--input",  string(elevsEncoded))
 	out, errO := costCmd.Output()
 	if errO != nil {
 		log.Fatal(errO)

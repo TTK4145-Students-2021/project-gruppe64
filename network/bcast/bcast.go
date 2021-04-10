@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"realtimeProject/Network-go/network/conn"
+	"realtimeProject/project-gruppe64/network/conn"
 	"reflect"
 )
 
