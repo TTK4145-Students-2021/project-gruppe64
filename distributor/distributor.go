@@ -2,6 +2,7 @@ package distributor
 
 import (
 	"fmt"
+	"realtimeProject/project-gruppe64/configuration"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
 	"strconv"
@@ -9,8 +10,7 @@ import (
 
 
 const (
-	ElevatorID = 0 //Må endres for hver vi laster opp på
-	NumElevators = 1
+
 )
 
 
@@ -30,11 +30,11 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 				break
 			}
 			designatedID := getDesignatedElevatorID(elevs)
-			if designatedID == ElevatorID {
+			if designatedID == configuration.ElevatorID {
 				fmt.Println("ORDER TO SELF")
 				orderToSelf <- hallOrd
 			} else {
-				sOrd := SendingOrder{designatedID, ElevatorID, hallOrd}
+				sOrd := SendingOrder{designatedID, configuration.ElevatorID, hallOrd}
 				sendingOrderThroughNet <- sOrd
 				messageTimer <- sOrd
 				orderTimer <- sOrd
@@ -63,10 +63,12 @@ func OrderDistributor(hallOrder <-chan hardwareIO.ButtonEvent, elevatorInfo <-ch
 				}
 			}
 		case elev := <-ownElevator:
-			elevs.States[strconv.Itoa(ElevatorID)] = getUpdatedElevatorTagged(ElevatorInformation{ElevatorID, elev.Floor, elev.MotorDirection, elev.Orders, elev.Behaviour})
+			elevs.States[strconv.Itoa(configuration.ElevatorID)] = getUpdatedElevatorTagged(ElevatorInformation{configuration.ElevatorID, elev.Floor, elev.MotorDirection, elev.Orders, elev.Behaviour})
 
 		case elevInfo := <-elevatorInfo:
-			distributedOrders[strconv.Itoa(elevInfo.ID)] = removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)])
+			if removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)]) != nil{ //måtte legge til dette for å ikke få feilmelding
+				distributedOrders[strconv.Itoa(elevInfo.ID)] = removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)])
+			}
 			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 		}
 	}

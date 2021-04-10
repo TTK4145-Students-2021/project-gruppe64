@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
+	"realtimeProject/project-gruppe64/configuration"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
 	"strconv"
@@ -11,9 +12,9 @@ import (
 
 func initiateElevatorsTagged() ElevatorsTagged{
 	elevs := ElevatorsTagged{}
-	elevs.HallOrders = [hardwareIO.NumFloors][2]bool{}
+	elevs.HallOrders = [configuration.NumFloors][2]bool{}
 	statesMap :=  make(map[string]ElevatorTagged)
-	for elevNum := 0; elevNum < NumElevators; elevNum ++ {
+	for elevNum := 0; elevNum < configuration.NumElevators; elevNum ++ {
 		statesMap[strconv.Itoa(elevNum)] = ElevatorTagged{}
 	}
 	elevs.States = statesMap
@@ -44,7 +45,7 @@ func getUpdatedElevatorTagged(e ElevatorInformation) ElevatorTagged{
 	default:
 		motorDirString = ""
 	}
-	cabOrds := [hardwareIO.NumFloors]bool{}
+	cabOrds := [configuration.NumFloors]bool{}
 	indexCount := 0
 	for _, f := range e.Orders{
 		if f[2] == 0{ //Tror dette er cab knappen i matrisen (?) litt usikker

@@ -2,12 +2,10 @@ package hardwareIO
 
 import (
 	"fmt"
+	"realtimeProject/project-gruppe64/configuration"
 )
 
-const (
-	NumFloors = 4
-	NumButtons = 3
-)
+
 
 
 func RunHardware(orderToSelf chan<- ButtonEvent, hallOrder chan<- ButtonEvent, floorArrival chan<- int, obstructionEvent chan<- bool)  {
@@ -45,7 +43,7 @@ func RunHardware(orderToSelf chan<- ButtonEvent, hallOrder chan<- ButtonEvent, f
 				SetStopLamp(true)
 			}
 			fmt.Printf("%+v\n", a)
-			for f := 0; f < NumFloors; f++ {
+			for f := 0; f < configuration.NumFloors; f++ {
 				for b := ButtonType(0); b < 3; b++ {
 					SetButtonLamp(b, f, false)
 				}
