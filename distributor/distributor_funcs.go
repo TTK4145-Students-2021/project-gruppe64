@@ -7,6 +7,7 @@ import (
 	"realtimeProject/project-gruppe64/configuration"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"realtimeProject/project-gruppe64/network/sendandreceive"
 	"strconv"
 )
 
@@ -22,7 +23,7 @@ func initiateElevatorsTagged() ElevatorsTagged{
 }
 
 
-func getUpdatedElevatorTagged(e ElevatorInformation) ElevatorTagged{
+func getUpdatedElevatorTagged(e sendandreceive.ElevatorInformation) ElevatorTagged{
 	var behaviourString string
 	switch e.Behaviour {
 	case fsm.EB_Idle:
@@ -92,8 +93,8 @@ func getDesignatedElevatorID(elevs ElevatorsTagged) int {
 
 
 
-func checkIfOrderExecuted(elev ElevatorInformation, ord SendingOrder) bool {
-	if elev.Orders[ord.order.Floor][ord.order.Button] == 1 {
+func checkIfOrderExecuted(elev sendandreceive.ElevatorInformation, ord sendandreceive.SendingOrder) bool {
+	if elev.Orders[ord.Order.Floor][ord.Order.Button] == 1 {
 		return false
 	} else {
 		return true
@@ -101,8 +102,8 @@ func checkIfOrderExecuted(elev ElevatorInformation, ord SendingOrder) bool {
 
 }
 
-func removeExecutedOrders(elev ElevatorInformation, distributedOrds []SendingOrder) []SendingOrder{
-	var updatedDistributedOrds []SendingOrder
+func removeExecutedOrders(elev sendandreceive.ElevatorInformation, distributedOrds []sendandreceive.SendingOrder) []sendandreceive.SendingOrder{
+	var updatedDistributedOrds []sendandreceive.SendingOrder
 	for _, dOrds := range distributedOrds{
 		if !checkIfOrderExecuted(elev, dOrds){
 			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)

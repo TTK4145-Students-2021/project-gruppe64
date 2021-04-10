@@ -2,27 +2,9 @@ package distributor
 
 import (
 	"realtimeProject/project-gruppe64/configuration"
-	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/hardwareIO"
 )
 
-//////////////////////////////////SKAL LIGGE I NETWORK/////////////////////////////////////////
 
-type SendingOrder struct{
-	receivingElevatorID int
-	sendingElevatorID int
-	order hardwareIO.ButtonEvent
-}
-
-type ElevatorInformation struct{
-	ID     int
-	Floor int
-	MotorDirection hardwareIO.MotorDirection
-	Orders [configuration.NumFloors][configuration.NumButtons]int
-	Behaviour fsm.ElevatorBehaviour
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
 
 type ElevatorTagged struct  {
 	Behaviour string `json:"behaviour"`
