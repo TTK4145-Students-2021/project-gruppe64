@@ -53,7 +53,7 @@ func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagge
 		}
 		indexCount += 1
 	}
-	return system.ElevatorTagged{behaviourString, e.Floor, motorDirString, cabOrds}
+	return system.ElevatorTagged{Behaviour: behaviourString, Floor: e.Floor, MotorDirection: motorDirString, CabOrders: cabOrds}
 }
 
 

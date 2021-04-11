@@ -1,12 +1,13 @@
 package timer
 
 import (
+	"fmt"
 	"realtimeProject/project-gruppe64/system"
 	"time"
 )
 
 const(
-	messageTimerDuration = 1 //sek
+	messageTimerDuration = 30 //sek
 	orderTimerDuration = 60 //sek
 )
 
@@ -50,7 +51,7 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
 func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder){
-	timersRunningMap := map[system.SendingOrder]bool{}
+	timersRunningMap := make(map[system.SendingOrder]bool)
 	for{
 		select {
 		case ord := <-messageTimer:
@@ -62,6 +63,7 @@ func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedO
 				time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func() {
 					_, found = timersRunningMap[ord]
 					if found {
+						fmt.Println("Message timer timed out")
 						messageTimerTimedOut <- ord
 						delete(timersRunningMap, ord)
 					}
@@ -76,6 +78,7 @@ func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut cha
 		select {
 		case ord := <-orderTimer:
 			time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
+				fmt.Println("Order timer timed out")
 				orderTimerTimedOut <- ord
 			})
 		}

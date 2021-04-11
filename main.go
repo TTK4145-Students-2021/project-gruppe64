@@ -12,7 +12,7 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	hardwareIO.Init("localhost:15657", system.NumFloors)
+	hardwareIO.Init(system.LocalHost, system.NumFloors)
 
 	orderToSelfCh := make(chan system.ButtonEvent)
 	hallOrderCh := make(chan system.ButtonEvent)
@@ -23,14 +23,16 @@ func main() {
 
 	ownElevatorCh := make(chan system.Elevator)
 
-	//Network channels
+	//Network channels for transmitting and receiving
+	receiveElevatorInfoCh := make(chan system.ElevatorInformation)
+	broadcastElevatorInfoCh := make(chan system.ElevatorInformation)
+	receiveOrderCh := make(chan system.SendingOrder)
+	sendPlacedMessageCh := make(chan system.SendingOrder)
+
+
 	sendingOrderThroughNetCh := make(chan system.SendingOrder) //channel that receives
-	placedOrderCh := make(chan system.SendingOrder) //output from another network module into other network module
 	elevatorInfoCh := make(chan system.ElevatorInformation) //channel with elevatorinformation, sent from networkmodule to
 	//own modules
-	othersElevatorInfoCh := make(chan system.ElevatorInformation)
-	placeOrderCh := make(chan system.SendingOrder) //sent from this networkmodule to other network module
-	acceptOrderCh := make(chan system.SendingOrder) //sent from this networkmodule to other network module
 
 	messageTimerCh := make(chan system.SendingOrder)
 	messageTimerTimedOutCh := make(chan system.SendingOrder)
@@ -50,8 +52,8 @@ func main() {
 	go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, ownElevatorCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh)
 
 	//Network:
-	go sendandreceive.GetReceiverAndTransmitterPorts(othersElevatorInfoCh, placedOrderCh, placeOrderCh, elevatorInfoCh)
-	go sendandreceive.SendReceiveOrders(ownElevatorCh, othersElevatorInfoCh, sendingOrderThroughNetCh, placedOrderCh, elevatorInfoCh, placeOrderCh, acceptOrderCh, messageTimerCh)
+	go sendandreceive.GetReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, receiveOrderCh, sendPlacedMessageCh, sendingOrderThroughNetCh, messageTimerCh)
+	go sendandreceive.SendReceiveOrders(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh, receiveOrderCh, orderToSelfCh, sendPlacedMessageCh)
 
 	for {}
 }
