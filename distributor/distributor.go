@@ -23,16 +23,23 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			default:
 				break
 			}
+			//NEED to put in some functionality so that if it is not initiated correctly, do not need all
 			designatedID := getDesignatedElevatorID(elevs)
 			if designatedID == system.ElevatorID {
 				fmt.Println("ORDER TO SELF")
 				orderToSelf <- hallOrd
 			} else {
+
 				sOrd := system.SendingOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID, Order: hallOrd}
 				sendingOrderThroughNet <- sOrd
 				messageTimer <- sOrd
 				orderTimer <- sOrd
-				distributedOrders[strconv.Itoa(designatedID)] =  []system.SendingOrder{sOrd} //NEEDS TO BE APPEND IF SOMETHING IS THERE
+				if distributedOrders[strconv.Itoa(designatedID)] != nil {
+					distributedOrders[strconv.Itoa(designatedID)] =  append(distributedOrders[strconv.Itoa(designatedID)], sOrd)
+				} else {
+					distributedOrders[strconv.Itoa(designatedID)] =  []system.SendingOrder{sOrd}
+				}
+
 			}
 			switch hallOrd.Button { //sletter ordren fra her og nå
 			case system.BT_HallUp:
@@ -56,6 +63,7 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 					}
 				}
 			}
+
 		case elev := <-ownElevator:
 			elevs.States[strconv.Itoa(system.ElevatorID)] = getUpdatedElevatorTagged(system.ElevatorInformation{ID: system.ElevatorID, Floor: elev.Floor, MotorDirection: elev.MotorDirection, Orders: elev.Orders, Behaviour: elev.Behaviour})
 

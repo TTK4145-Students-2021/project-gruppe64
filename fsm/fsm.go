@@ -125,10 +125,12 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 				doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 			}
 		default:
+			ownElevator <- elevator
 			break
 		}
 	}
 }
+
 
 
 

@@ -26,9 +26,7 @@ func main() {
 	//Network channels for transmitting and receiving
 	receiveElevatorInfoCh := make(chan system.ElevatorInformation)
 	broadcastElevatorInfoCh := make(chan system.ElevatorInformation)
-	receiveOrderCh := make(chan system.SendingOrder)
-	sendPlacedMessageCh := make(chan system.SendingOrder)
-
+	networkReceiveCh := make(chan system.SendingOrder)
 
 	sendingOrderThroughNetCh := make(chan system.SendingOrder) //channel that receives
 	elevatorInfoCh := make(chan system.ElevatorInformation) //channel with elevatorinformation, sent from networkmodule to
@@ -52,8 +50,7 @@ func main() {
 	go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, ownElevatorCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh)
 
 	//Network:
-	go sendandreceive.GetReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, receiveOrderCh, sendPlacedMessageCh, sendingOrderThroughNetCh, messageTimerCh)
-	go sendandreceive.SendReceiveOrders(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh, receiveOrderCh, orderToSelfCh, sendPlacedMessageCh)
-
+	go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, messageTimerCh, orderToSelfCh)
+	go sendandreceive.InformationSharingThroughNet(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh)
 	for {}
 }

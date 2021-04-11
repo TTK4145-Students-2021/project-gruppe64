@@ -7,8 +7,8 @@ import (
 )
 
 const(
-	messageTimerDuration = 30 //sek
-	orderTimerDuration = 60 //sek
+	messageTimerDuration = 2 //sek
+	orderTimerDuration = 40 //sek
 )
 
 func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bool) {

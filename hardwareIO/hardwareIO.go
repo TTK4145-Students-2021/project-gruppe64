@@ -24,7 +24,6 @@ func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.
 		select {
 		case a := <- drvButtons:
 			fmt.Printf("%+v\n", a)
-			SetButtonLamp(a.Button, a.Floor, true)
 			if a.Button == system.BT_Cab { //Sjekker om til fsm eller til distributor
 				orderToSelf <- a
 			} else {
