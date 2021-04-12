@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	resendNum = 1
-)
+	resendNum = 10
+	)
 
 
 
@@ -41,7 +41,7 @@ func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcast
 			broadcastElevatorInfo <- system.ElevatorInformation{ID: system.ElevatorID, Floor: ownElev.Floor, MotorDirection: ownElev.MotorDirection, Orders: ownElev.Orders, Behaviour: ownElev.Behaviour}
 
 		case rcvElevInfo := <-receiveElevatorInfo:
-			if rcvElevInfo.ID != system.ElevatorID { //FSM sender alt egen til distributor
+			if rcvElevInfo.ID != system.ElevatorID {
 				//fmt.Printf("Elevatorinfo from other elevator: %#v\n", rcvElevInfo)
 				elevatorInfoCh <- rcvElevInfo
 			}
@@ -73,7 +73,7 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 			}
 
 			if netReceive.ReceivingElevatorID == system.ElevatorID { //THEN IT IS A ORDER
-					//fmt.Printf("Order received: %#v\n", netReceive)
+					fmt.Printf("Order received: %#v\n", netReceive)
 					orderToSelf <- netReceive.Order
 					networkSend <- netReceive //As placed message
 			}

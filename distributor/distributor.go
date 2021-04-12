@@ -6,8 +6,6 @@ import (
 	"strconv"
 )
 
-
-
 // GOROUTINE:
 func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan system.ElevatorInformation, ownElevator <-chan system.Elevator, sendingOrderThroughNet chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.SendingOrder, messageTimerTimedOut <-chan system.SendingOrder, orderTimer chan<- system.SendingOrder, orderTimerTimedOut <- chan system.SendingOrder){
 	elevs := initiateElevatorsTagged()
@@ -51,6 +49,9 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			}
 
 		case msgTimedOut := <- messageTimerTimedOut:
+			if distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)] != nil {
+				distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)] = removeOrderFromOrders(msgTimedOut, distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)])
+			}
 			orderToSelf <- msgTimedOut.Order
 
 		case ordTimedOut := <- orderTimerTimedOut:
@@ -58,6 +59,7 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 				if key == strconv.Itoa(ordTimedOut.ReceivingElevatorID){
 					for _, dOrd := range dOrds{
 						if dOrd == ordTimedOut{
+							distributedOrders[key] = removeOrderFromOrders(ordTimedOut, distributedOrders[key])
 							orderToSelf <- ordTimedOut.Order
 						}
 					}

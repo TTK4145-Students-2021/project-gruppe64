@@ -56,9 +56,18 @@ func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagge
 	return system.ElevatorTagged{Behaviour: behaviourString, Floor: e.Floor, MotorDirection: motorDirString, CabOrders: cabOrds}
 }
 
+func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.ElevatorsTagged{
+	retStates := make(map[string]system.ElevatorTagged)
+	for elevKey, elevTagged := range elevs.States{
+		if elevTagged.Behaviour != "" {
+			retStates[elevKey] = elevTagged
+		}
+	}
+	return system.ElevatorsTagged{HallOrders: elevs.HallOrders, States: retStates}
+}
 
 func getDesignatedElevatorID(elevs system.ElevatorsTagged) int {
-	elevsEncoded, errM := json.Marshal(elevs)
+	elevsEncoded, errM := json.Marshal(removeElevatorsWithoutInformation(elevs))
 	if errM != nil {
 		log.Fatal(errM)
 	}
@@ -109,3 +118,14 @@ func removeExecutedOrders(elev system.ElevatorInformation, distributedOrds []sys
 	return updatedDistributedOrds
 }
 
+func removeOrderFromOrders(orderToRemove system.SendingOrder, orders []system.SendingOrder) []system.SendingOrder {
+	retOrders := orders
+	for index := 0; index < len(retOrders); index++ {
+		if retOrders[index] == orderToRemove {
+			retOrders[index] = retOrders[len(retOrders) - 1]
+			retOrders[len(retOrders) - 1] = system.SendingOrder{}
+			return retOrders[:len(retOrders) - 1]
+		}
+	}
+	return retOrders
+}
