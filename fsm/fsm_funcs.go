@@ -123,6 +123,12 @@ func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator {
 			e.Orders[e.Floor][system.BT_HallUp] = 0
 			e.Orders[e.Floor][system.BT_HallDown] = 0
 		}
+
+	default:
+		for button := 0; button < system.NumButtons; button++ { //_numButtons= 3
+			e.Orders[e.Floor][button] = 0
+		}
+
 	}
 	return e
 }

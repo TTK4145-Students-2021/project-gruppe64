@@ -31,11 +31,10 @@ func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.
 			fmt.Printf("%+v\n", a)
 			floorArrival <- a
 		case a := <-drvObstr:
-			if a == true {
+			if a == false {
 				fmt.Printf("%+v\n", a)
 				obstructionEvent <- a
 			}
-			
 		//case a := <-drvStop:
 			// Can choose if implemented
 			//for a {

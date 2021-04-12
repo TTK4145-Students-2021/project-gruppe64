@@ -2,7 +2,6 @@ package distributor
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os/exec"
 	"strconv"
@@ -69,16 +68,13 @@ func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.Elev
 
 func getDesignatedElevatorID(elevs system.ElevatorsTagged) int {
 	elevsEncoded, errM := json.Marshal(removeElevatorsWithoutInformation(elevs))
-	fmt.Printf("HERE0")
 	if errM != nil {
 		log.Fatal(errM)
+
 	}
-	fmt.Printf("HERE1")
 	costCmd := exec.Command("./distributor/hall_request_assigner", "--input", string(elevsEncoded))
-	fmt.Printf("HERE2")
 	out, errO := costCmd.Output()
 	if errO != nil {
-		fmt.Printf("ERROR HERE 0")
 		log.Fatal(errO)
 	}
 

@@ -77,7 +77,7 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 
 		default:
-			break	
+			break
 		}
 	}
 }

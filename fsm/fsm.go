@@ -9,7 +9,7 @@ import (
 
 func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- system.Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool) {
 	elevator := system.Elevator{}
-	obstruction := false
+	//obstruction := false
 
 	select {
 	case flrA := <-floorArrival: // If the floor sensor registers a floor at initialization
@@ -33,9 +33,9 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 
 		select {
 		case btnE := <-orderToSelf:
-			if obstruction {
-				break
-			}
+			//if obstruction {
+			//	break
+			//}
 			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
 			switch elevator.Behaviour {
 			case system.EB_DoorOpen:
@@ -83,11 +83,11 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 					elevator.MotorDirection = system.MD_Up
 				} else if elevator.Floor == 3 {
 					elevator.MotorDirection = system.MD_Down
-				} else if obstruction {
-					hardwareIO.SetMotorDirection(system.MD_Stop)
-					hardwareIO.SetDoorOpenLamp(true)
-					elevator.Behaviour = system.EB_DoorOpen
-				}
+				} //else if obstruction {
+					//hardwareIO.SetMotorDirection(system.MD_Stop)
+					//hardwareIO.SetDoorOpenLamp(true)
+					//elevator.Behaviour = system.EB_DoorOpen
+				//}
 				break
 			default:
 				fmt.Printf("\n Arrived at floor but nothing happend. Undefined state.\n")
@@ -96,9 +96,9 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 			setAllButtonLights(elevator)
 			ownElevator <- elevator
 		case dTTimedOut := <-doorTimerTimedOut:
-			if obstruction {
-				break
-			}
+			//if obstruction {
+			//	break
+			//}
 			if dTTimedOut {
 				
 				switch elevator.Behaviour {
@@ -119,13 +119,13 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 				}
 			}
 			ownElevator <- elevator
-		case obstrE := <-obstructionEvent:
-			if obstrE {
-				obstruction = true
-			} else {
-				obstruction = false
-				doorTimerDuration <- elevator.Config.DoorOpenDurationSec
-			}
+		//case obstrE := <-obstructionEvent:
+		//	if obstrE {
+		//		obstruction = true
+		//	} else {
+		//		obstruction = false
+		//		doorTimerDuration <- elevator.Config.DoorOpenDurationSec
+		//	}
 		default:
 			ownElevator <- elevator
 			break
