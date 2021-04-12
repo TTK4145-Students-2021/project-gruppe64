@@ -2,7 +2,7 @@ package hardwareIO
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/system"
+	"../system"
 )
 
 

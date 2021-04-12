@@ -2,8 +2,8 @@ package fsm
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/system"
+	"../hardwareIO"
+	"../system"
 )
 
 

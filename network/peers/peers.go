@@ -3,7 +3,7 @@ package peers
 import (
 	"fmt"
 	"net"
-	"realtimeProject/project-gruppe64/network/conn"
+	"../conn"
 	"sort"
 	"time"
 )

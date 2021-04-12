@@ -1,12 +1,12 @@
 package main
 
 import (
-	"realtimeProject/project-gruppe64/distributor"
-	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/network/sendandreceive"
-	"realtimeProject/project-gruppe64/system"
-	"realtimeProject/project-gruppe64/timer"
+	"./distributor"
+	"./fsm"
+	"./hardwareIO"
+	"./network/sendandreceive"
+	"./system"
+	"./timer"
 	"runtime"
 )
 

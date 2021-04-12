@@ -2,8 +2,8 @@ package sendandreceive
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/network/bcast"
-	"realtimeProject/project-gruppe64/system"
+	"../bcast"
+	"../../system"
 )
 
 const (

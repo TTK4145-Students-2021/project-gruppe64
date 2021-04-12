@@ -3,7 +3,7 @@ package hardwareIO
 import (
 	"fmt"
 	"net"
-	"realtimeProject/project-gruppe64/system"
+	"../system"
 	"sync"
 	"time"
 )

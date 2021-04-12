@@ -2,7 +2,7 @@ package timer
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/system"
+	"../system"
 	"time"
 )
 
