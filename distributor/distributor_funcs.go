@@ -2,25 +2,26 @@ package distributor
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os/exec"
-	"realtimeProject/project-gruppe64/system"
 	"strconv"
+
+	"../system"
 )
 
-func initiateElevatorsTagged() system.ElevatorsTagged{
+func initiateElevatorsTagged() system.ElevatorsTagged {
 	elevs := system.ElevatorsTagged{}
 	elevs.HallOrders = [system.NumFloors][2]bool{}
-	statesMap :=  make(map[string]system.ElevatorTagged)
-	for elevNum := 0; elevNum < system.NumElevators; elevNum ++ {
+	statesMap := make(map[string]system.ElevatorTagged)
+	for elevNum := 0; elevNum < system.NumElevators; elevNum++ {
 		statesMap[strconv.Itoa(elevNum)] = system.ElevatorTagged{}
 	}
 	elevs.States = statesMap
 	return elevs
 }
 
-
-func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagged{
+func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagged {
 	var behaviourString string
 	switch e.Behaviour {
 	case system.EB_Idle:
@@ -45,8 +46,8 @@ func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagge
 	}
 	cabOrds := [system.NumFloors]bool{}
 	indexCount := 0
-	for _, f := range e.Orders{
-		if f[2] == 0{ //Tror dette er cab knappen i matrisen (?) litt usikker
+	for _, f := range e.Orders {
+		if f[2] == 0 { //Tror dette er cab knappen i matrisen (?) litt usikker
 			cabOrds[indexCount] = false
 		} else {
 			cabOrds[indexCount] = true
@@ -56,9 +57,9 @@ func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagge
 	return system.ElevatorTagged{Behaviour: behaviourString, Floor: e.Floor, MotorDirection: motorDirString, CabOrders: cabOrds}
 }
 
-func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.ElevatorsTagged{
+func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.ElevatorsTagged {
 	retStates := make(map[string]system.ElevatorTagged)
-	for elevKey, elevTagged := range elevs.States{
+	for elevKey, elevTagged := range elevs.States {
 		if elevTagged.Behaviour != "" {
 			retStates[elevKey] = elevTagged
 		}
@@ -68,12 +69,16 @@ func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.Elev
 
 func getDesignatedElevatorID(elevs system.ElevatorsTagged) int {
 	elevsEncoded, errM := json.Marshal(removeElevatorsWithoutInformation(elevs))
+	fmt.Printf("HERE0")
 	if errM != nil {
 		log.Fatal(errM)
 	}
-	costCmd := exec.Command("./distributor/hall_request_assigner.exe", "--input",  string(elevsEncoded))
+	fmt.Printf("HERE1")
+	costCmd := exec.Command("./distributor/hall_request_assigner", "--input", string(elevsEncoded))
+	fmt.Printf("HERE2")
 	out, errO := costCmd.Output()
 	if errO != nil {
+		fmt.Printf("ERROR HERE 0")
 		log.Fatal(errO)
 	}
 
@@ -97,8 +102,6 @@ func getDesignatedElevatorID(elevs system.ElevatorsTagged) int {
 	return -1
 }
 
-
-
 func checkIfOrderExecuted(elev system.ElevatorInformation, ord system.SendingOrder) bool {
 	if elev.Orders[ord.Order.Floor][ord.Order.Button] == 1 {
 		return false
@@ -108,10 +111,10 @@ func checkIfOrderExecuted(elev system.ElevatorInformation, ord system.SendingOrd
 
 }
 
-func removeExecutedOrders(elev system.ElevatorInformation, distributedOrds []system.SendingOrder) []system.SendingOrder{
+func removeExecutedOrders(elev system.ElevatorInformation, distributedOrds []system.SendingOrder) []system.SendingOrder {
 	var updatedDistributedOrds []system.SendingOrder
-	for _, dOrds := range distributedOrds{
-		if !checkIfOrderExecuted(elev, dOrds){
+	for _, dOrds := range distributedOrds {
+		if !checkIfOrderExecuted(elev, dOrds) {
 			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)
 		}
 	}
@@ -122,9 +125,9 @@ func removeOrderFromOrders(orderToRemove system.SendingOrder, orders []system.Se
 	retOrders := orders
 	for index := 0; index < len(retOrders); index++ {
 		if retOrders[index] == orderToRemove {
-			retOrders[index] = retOrders[len(retOrders) - 1]
-			retOrders[len(retOrders) - 1] = system.SendingOrder{}
-			return retOrders[:len(retOrders) - 1]
+			retOrders[index] = retOrders[len(retOrders)-1]
+			retOrders[len(retOrders)-1] = system.SendingOrder{}
+			return retOrders[:len(retOrders)-1]
 		}
 	}
 	return retOrders

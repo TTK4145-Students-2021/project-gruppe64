@@ -2,12 +2,13 @@ package distributor
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/system"
 	"strconv"
+
+	"../system"
 )
 
 // GOROUTINE:
-func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan system.ElevatorInformation, ownElevator <-chan system.Elevator, sendingOrderThroughNet chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.SendingOrder, messageTimerTimedOut <-chan system.SendingOrder, orderTimer chan<- system.SendingOrder, orderTimerTimedOut <- chan system.SendingOrder){
+func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan system.ElevatorInformation, ownElevator <-chan system.Elevator, sendingOrderThroughNet chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.SendingOrder, messageTimerTimedOut <-chan system.SendingOrder, orderTimer chan<- system.SendingOrder, orderTimerTimedOut <-chan system.SendingOrder) {
 	elevs := initiateElevatorsTagged()
 	distributedOrders := make(map[string][]system.SendingOrder)
 	for {
@@ -33,9 +34,9 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 				messageTimer <- sOrd
 				orderTimer <- sOrd
 				if distributedOrders[strconv.Itoa(designatedID)] != nil {
-					distributedOrders[strconv.Itoa(designatedID)] =  append(distributedOrders[strconv.Itoa(designatedID)], sOrd)
+					distributedOrders[strconv.Itoa(designatedID)] = append(distributedOrders[strconv.Itoa(designatedID)], sOrd)
 				} else {
-					distributedOrders[strconv.Itoa(designatedID)] =  []system.SendingOrder{sOrd}
+					distributedOrders[strconv.Itoa(designatedID)] = []system.SendingOrder{sOrd}
 				}
 
 			}
@@ -48,17 +49,17 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 				break
 			}
 
-		case msgTimedOut := <- messageTimerTimedOut:
+		case msgTimedOut := <-messageTimerTimedOut:
 			if distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)] != nil {
 				distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)] = removeOrderFromOrders(msgTimedOut, distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)])
 			}
 			orderToSelf <- msgTimedOut.Order
 
-		case ordTimedOut := <- orderTimerTimedOut:
-			for key, dOrds := range distributedOrders{
-				if key == strconv.Itoa(ordTimedOut.ReceivingElevatorID){
-					for _, dOrd := range dOrds{
-						if dOrd == ordTimedOut{
+		case ordTimedOut := <-orderTimerTimedOut:
+			for key, dOrds := range distributedOrders {
+				if key == strconv.Itoa(ordTimedOut.ReceivingElevatorID) {
+					for _, dOrd := range dOrds {
+						if dOrd == ordTimedOut {
 							distributedOrders[key] = removeOrderFromOrders(ordTimedOut, distributedOrders[key])
 							orderToSelf <- ordTimedOut.Order
 						}
@@ -70,10 +71,13 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			elevs.States[strconv.Itoa(system.ElevatorID)] = getUpdatedElevatorTagged(system.ElevatorInformation{ID: system.ElevatorID, Floor: elev.Floor, MotorDirection: elev.MotorDirection, Orders: elev.Orders, Behaviour: elev.Behaviour})
 
 		case elevInfo := <-elevatorInfo:
-			if removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)]) != nil{ //måtte legge til dette for å ikke få feilmelding
+			if removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)]) != nil { //måtte legge til dette for å ikke få feilmelding
 				distributedOrders[strconv.Itoa(elevInfo.ID)] = removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)])
 			}
 			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
+
+		default:
+			break	
 		}
 	}
 }
@@ -85,4 +89,3 @@ func elevatorOperationCheck(){
 	//Tenk litt som timerene for order og message
 }
 */
-

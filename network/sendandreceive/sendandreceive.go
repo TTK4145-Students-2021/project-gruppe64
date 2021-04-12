@@ -2,37 +2,36 @@ package sendandreceive
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/network/bcast"
-	"realtimeProject/project-gruppe64/system"
+
+	"../../system"
+	"../bcast"
 )
 
 const (
 	resendNum = 10
-	)
-
-
+)
 
 func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.ElevatorInformation, broadcastElevatorInfo chan system.ElevatorInformation,
 	networkReceive chan system.SendingOrder, sendingOrderThroughNet <-chan system.SendingOrder,
-	messageTimer chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent){
+	messageTimer chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent) {
 
-	go bcast.Receiver(60000, receiveElevatorInfo) //Receive others elevator information
+	go bcast.Receiver(60000, receiveElevatorInfo)      //Receive others elevator information
 	go bcast.Transmitter(60000, broadcastElevatorInfo) //Send elevator Information
 
-	 //PLACED MESSAGE AND ORDER ON SAME. TO FROM/
+	//PLACED MESSAGE AND ORDER ON SAME. TO FROM/
 	go bcast.Receiver(60001+system.ElevatorID, networkReceive) //Receive orders
 
 	for elevID := 0; elevID < system.NumElevators; elevID++ {
 		if elevID != system.ElevatorID {
-			networkSendCh := make(chan system.SendingOrder) //Reset every run
-			go bcast.Transmitter(60001 +elevID, networkSendCh) //Transmit orders to place
+			networkSendCh := make(chan system.SendingOrder)   //Reset every run
+			go bcast.Transmitter(60001+elevID, networkSendCh) //Transmit orders to place
 			go placeOrderNetworking(elevID, sendingOrderThroughNet, messageTimer,
 				networkSendCh, networkReceive, orderToSelf)
 		}
 	}
 
 }
-func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcastElevatorInfo chan <- system.ElevatorInformation, receiveElevatorInfo <- chan system.ElevatorInformation,
+func InformationSharingThroughNet(ownElevator <-chan system.Elevator, broadcastElevatorInfo chan<- system.ElevatorInformation, receiveElevatorInfo <-chan system.ElevatorInformation,
 	elevatorInfoCh chan<- system.ElevatorInformation) {
 	for {
 		select {
@@ -45,15 +44,18 @@ func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcast
 				//fmt.Printf("Elevatorinfo from other elevator: %#v\n", rcvElevInfo)
 				elevatorInfoCh <- rcvElevInfo
 			}
+		default:
+			break	
 
 		}
+	
 	}
 }
 
 func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan system.SendingOrder, messageTimer chan<- system.SendingOrder, networkSend chan<- system.SendingOrder, networkReceive <-chan system.SendingOrder, orderToSelf chan<- system.ButtonEvent) {
 	duplicate := system.SendingOrder{}
-	for{
-		select{
+	for {
+		select {
 		case sOrdNet := <-sendingOrderThroughNet:
 			if sOrdNet.ReceivingElevatorID == threadElevatorID {
 				fmt.Printf("Order sent through network: %#v\n", sOrdNet)
@@ -73,10 +75,13 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 			}
 
 			if netReceive.ReceivingElevatorID == system.ElevatorID { //THEN IT IS A ORDER
-					fmt.Printf("Order received: %#v\n", netReceive)
-					orderToSelf <- netReceive.Order
-					networkSend <- netReceive //As placed message
+				fmt.Printf("Order received: %#v\n", netReceive)
+				orderToSelf <- netReceive.Order
+				networkSend <- netReceive //As placed message
 			}
+
+		default:
+			break	
 		}
 	}
 }

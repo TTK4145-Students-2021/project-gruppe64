@@ -3,9 +3,10 @@ package hardwareIO
 import (
 	"fmt"
 	"net"
-	"realtimeProject/project-gruppe64/system"
 	"sync"
 	"time"
+
+	"../system"
 )
 
 const _pollRate = 20 * time.Millisecond
@@ -60,8 +61,6 @@ func SetStopLamp(value bool) {
 	_conn.Write([]byte{5, toByte(value), 0, 0})
 }
 
-
-
 func PollButtons(receiver chan<- system.ButtonEvent) {
 	prev := make([][3]bool, _numFloors)
 	for {
@@ -113,7 +112,6 @@ func PollObstructionSwitch(receiver chan<- bool) {
 		prev = v
 	}
 }
-
 
 func GetButton(button system.ButtonType, floor int) bool {
 	_mtx.Lock()
@@ -170,4 +168,3 @@ func toBool(a byte) bool {
 	}
 	return b
 }
-

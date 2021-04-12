@@ -1,13 +1,14 @@
 package main
 
 import (
-	"realtimeProject/project-gruppe64/distributor"
-	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/network/sendandreceive"
-	"realtimeProject/project-gruppe64/system"
-	"realtimeProject/project-gruppe64/timer"
 	"runtime"
+
+	"./distributor"
+	"./fsm"
+	"./hardwareIO"
+	"./network/sendandreceive"
+	"./system"
+	"./timer"
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 	networkReceiveCh := make(chan system.SendingOrder)
 
 	sendingOrderThroughNetCh := make(chan system.SendingOrder) //channel that receives
-	elevatorInfoCh := make(chan system.ElevatorInformation) //channel with elevatorinformation, sent from networkmodule to
+	elevatorInfoCh := make(chan system.ElevatorInformation)    //channel with elevatorinformation, sent from networkmodule to
 	//own modules
 
 	messageTimerCh := make(chan system.SendingOrder)
@@ -52,5 +53,6 @@ func main() {
 	//Network:
 	go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, messageTimerCh, orderToSelfCh)
 	go sendandreceive.InformationSharingThroughNet(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh)
-	for {}
+	for {
+	}
 }

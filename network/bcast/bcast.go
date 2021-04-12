@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"realtimeProject/project-gruppe64/network/conn"
 	"reflect"
+
+	"../conn"
 )
 
 // Encodes received values from `chans` into type-tagged JSON, then broadcasts

@@ -2,16 +2,17 @@ package timer
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/system"
 	"time"
+
+	"../system"
 )
 
-const(
-	messageTimerDuration = 2 //sek
-	orderTimerDuration = 40 //sek
+const (
+	messageTimerDuration = 2  //sek
+	orderTimerDuration   = 40 //sek
 )
 
-func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bool) {
+func RunDoorTimer(doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bool) {
 	timerRunning := false
 	stopTimerFromTimeOut := false
 	for {
@@ -44,19 +45,16 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 	}
 }
 
-
-
-
 //send ordren når message timer startes (når ny melding sendes), og
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
-func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder){
+func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder) {
 	timersRunningMap := make(map[system.SendingOrder]bool)
-	for{
+	for {
 		select {
 		case ord := <-messageTimer:
 			_, found := timersRunningMap[ord]
-			if found{ //Om her så er casen at vi har mottatt accepted message
+			if found { //Om her så er casen at vi har mottatt accepted message
 				delete(timersRunningMap, ord)
 			} else {
 				timersRunningMap[ord] = true //setter opp en timer her
@@ -73,8 +71,8 @@ func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedO
 	}
 }
 
-func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut chan<- system.SendingOrder){
-	for{
+func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut chan<- system.SendingOrder) {
+	for {
 		select {
 		case ord := <-orderTimer:
 			time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
@@ -84,5 +82,3 @@ func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut cha
 		}
 	}
 }
-
-

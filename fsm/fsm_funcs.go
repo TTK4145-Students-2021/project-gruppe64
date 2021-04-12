@@ -2,13 +2,14 @@ package fsm
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/system"
+
+	"../hardwareIO"
+	"../system"
 )
 
-func setAllButtonLights(e system.Elevator){
+func setAllButtonLights(e system.Elevator) {
 	for f := 0; f < system.NumFloors; f++ {
-		for b := 0; b < system.NumButtons; b++  {
+		for b := 0; b < system.NumButtons; b++ {
 			if e.Orders[f][b] != 0 {
 				hardwareIO.SetButtonLamp(system.ButtonType(b), f, true)
 			} else {
@@ -19,7 +20,7 @@ func setAllButtonLights(e system.Elevator){
 }
 
 func orderAbove(e system.Elevator) bool {
-	for f := e.Floor+1; f < system.NumFloors; f++ {
+	for f := e.Floor + 1; f < system.NumFloors; f++ {
 		for b := 0; b < system.NumButtons; b++ {
 			if e.Orders[f][b] != 0 {
 				return true
@@ -40,11 +41,11 @@ func orderBelow(e system.Elevator) bool {
 	return false
 }
 
-func chooseDirection(e system.Elevator) system.MotorDirection{
+func chooseDirection(e system.Elevator) system.MotorDirection {
 	var returnDir system.MotorDirection
 	switch e.MotorDirection {
 	case system.MD_Up:
-		if orderAbove(e){
+		if orderAbove(e) {
 			returnDir = system.MD_Up
 		} else if orderBelow(e) {
 			returnDir = system.MD_Down
@@ -53,17 +54,17 @@ func chooseDirection(e system.Elevator) system.MotorDirection{
 		}
 	case system.MD_Down:
 
-		if orderBelow(e){
+		if orderBelow(e) {
 			returnDir = system.MD_Down
-		} else if orderAbove(e){
+		} else if orderAbove(e) {
 			returnDir = system.MD_Up
 		} else {
 			returnDir = system.MD_Stop
 		}
 	case system.MD_Stop:
-		if orderBelow(e){
+		if orderBelow(e) {
 			returnDir = system.MD_Down
-		} else if orderAbove(e){
+		} else if orderAbove(e) {
 			returnDir = system.MD_Up
 		}
 	default:
@@ -75,15 +76,15 @@ func chooseDirection(e system.Elevator) system.MotorDirection{
 func elevatorShouldStop(e system.Elevator) bool {
 	switch e.MotorDirection {
 	case system.MD_Down:
-		if e.Orders[e.Floor][system.BT_HallDown] != 0 || e.Orders[e.Floor][system.BT_Cab] != 0 || !orderBelow(e){ //This gives me if eRequests == true, right?
+		if e.Orders[e.Floor][system.BT_HallDown] != 0 || e.Orders[e.Floor][system.BT_Cab] != 0 || !orderBelow(e) { //This gives me if eRequests == true, right?
 			return true
-		} else{
+		} else {
 			return false
 		}
 	case system.MD_Up:
-		if e.Orders[e.Floor][system.BT_HallUp] != 0 || e.Orders[e.Floor][system.BT_Cab] != 0 || !orderAbove(e){ //This gives me if eRequests == true, right?
+		if e.Orders[e.Floor][system.BT_HallUp] != 0 || e.Orders[e.Floor][system.BT_Cab] != 0 || !orderAbove(e) { //This gives me if eRequests == true, right?
 			return true
-		} else{
+		} else {
 			return false
 		}
 
@@ -95,7 +96,7 @@ func elevatorShouldStop(e system.Elevator) bool {
 	return true
 }
 
-func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
+func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator {
 	switch e.Config.ClearOrdersVariant {
 	case system.CO_All: //CV:clear request variant
 		for button := 0; button < system.NumButtons; button++ { //_numButtons= 3
@@ -126,7 +127,6 @@ func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 	return e
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////Maybe not necessary/////////////////////////////////////
 
@@ -155,10 +155,10 @@ func motorDirectionToString(mD system.MotorDirection) string { // Importere? Sto
 }
 
 func printElevator(e system.Elevator) {
-	fmt.Printf("  +--------------------+\n")                                             // Sjekk om dette er riktig print-funksjon!
+	fmt.Printf("  +--------------------+\n")                                          // Sjekk om dette er riktig print-funksjon!
 	fmt.Printf("  |floor = %-2d          |\n", e.Floor)                               // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)
 	fmt.Printf("|direction  = %-12.12s|\n", motorDirectionToString(e.MotorDirection)) // Måtte dele opp for at det skulle bli riktig
-	fmt.Printf("|behaviour = %s|\n", elevatorBehaviourToString(e.Behaviour))                         // Hvorfor feilmelding her?
+	fmt.Printf("|behaviour = %s|\n", elevatorBehaviourToString(e.Behaviour))          // Hvorfor feilmelding her?
 	fmt.Printf("  +--------------------+\n")
 	fmt.Printf("  |  | up  | dn  | cab |\n")
 	for f := system.NumFloors - 1; f >= 0; f-- {
