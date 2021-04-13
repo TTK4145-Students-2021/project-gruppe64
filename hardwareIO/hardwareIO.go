@@ -47,6 +47,8 @@ func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.
 					SetButtonLamp(b, f, false)
 				}
 			}
+		default:
+			break
 		}
 	}
 }

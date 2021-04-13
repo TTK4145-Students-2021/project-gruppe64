@@ -69,6 +69,8 @@ func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedO
 					}
 				})
 			}
+		default:
+			break
 		}
 	}
 }
@@ -81,6 +83,8 @@ func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut cha
 				fmt.Println("Order timer timed out")
 				orderTimerTimedOut <- ord
 			})
+		default:
+			break
 		}
 	}
 }

@@ -45,7 +45,8 @@ func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcast
 				//fmt.Printf("Elevatorinfo from other elevator: %#v\n", rcvElevInfo)
 				elevatorInfoCh <- rcvElevInfo
 			}
-
+		default:
+			break
 		}
 	}
 }
@@ -77,6 +78,8 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 					orderToSelf <- netReceive.Order
 					networkSend <- netReceive //As placed message
 			}
+		default:
+			break
 		}
 	}
 }
