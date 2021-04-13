@@ -45,8 +45,7 @@ func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcast
 				//fmt.Printf("Elevatorinfo from other elevator: %#v\n", rcvElevInfo)
 				elevatorInfoCh <- rcvElevInfo
 			}
-		default:
-			break
+
 		}
 	}
 }
@@ -70,16 +69,17 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 					messageTimer <- netReceive
 					duplicate = netReceive
 				}
-
 			}
 
 			if netReceive.ReceivingElevatorID == system.ElevatorID { //THEN IT IS A ORDER
+				if duplicate != netReceive {
 					fmt.Printf("Order received: %#v\n", netReceive)
 					orderToSelf <- netReceive.Order
-					networkSend <- netReceive //As placed message
+					for i := 0; i < resendNum; i ++ {
+						networkSend <- netReceive //As placed message
+					}
+				}
 			}
-		default:
-			break
 		}
 	}
 }

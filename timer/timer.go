@@ -7,7 +7,7 @@ import (
 )
 
 const(
-	messageTimerDuration = 2 //sek
+	messageTimerDuration = 4 //sek
 	orderTimerDuration = 40 //sek
 )
 
@@ -17,6 +17,7 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 	for {
 		select {
 		case dTD := <-doorTimerDuration:
+			fmt.Println("Door timer started")
 			if timerRunning {
 				stopTimerFromTimeOut = true
 				time.AfterFunc(time.Duration(dTD)*time.Second, func() {
@@ -38,8 +39,6 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 					}
 				})
 			}
-		default:
-			break
 		}
 	}
 }
@@ -60,7 +59,7 @@ func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedO
 				delete(timersRunningMap, ord)
 			} else {
 				timersRunningMap[ord] = true //setter opp en timer her
-				time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func() {
+				go time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func() {
 					_, found = timersRunningMap[ord]
 					if found {
 						fmt.Println("Message timer timed out")
@@ -69,8 +68,6 @@ func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedO
 					}
 				})
 			}
-		default:
-			break
 		}
 	}
 }
@@ -79,12 +76,10 @@ func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut cha
 	for{
 		select {
 		case ord := <-orderTimer:
-			time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
+			go time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
 				fmt.Println("Order timer timed out")
 				orderTimerTimedOut <- ord
 			})
-		default:
-			break
 		}
 	}
 }
