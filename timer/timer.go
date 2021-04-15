@@ -49,25 +49,24 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 //send ordren når message timer startes (når ny melding sendes), og
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
-func RunMessageTimer(messageTimer <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder){
+func RunMessageTimer(messageTimer <-chan system.SendingOrder, placedMessageReceived <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder){
 	timersRunningMap := make(map[system.SendingOrder]bool)
+
 	for{
 		select {
-		case ord := <-messageTimer:
-			_, found := timersRunningMap[ord]
-			if found{ //Om her så er casen at vi har mottatt accepted message
-				delete(timersRunningMap, ord)
-			} else {
-				timersRunningMap[ord] = true //setter opp en timer her
-				go time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func() {
-					_, found = timersRunningMap[ord]
-					if found {
-						fmt.Println("Message timer timed out")
-						messageTimerTimedOut <- ord
-						delete(timersRunningMap, ord)
-					}
-				})
-			}
+		case msgTmr := <-messageTimer:
+			timersRunningMap[msgTmr] = true
+			go time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func(){
+				if timersRunningMap[msgTmr]{
+					fmt.Println("Message timer timed out")
+					messageTimerTimedOut <- msgTmr
+					delete(timersRunningMap, msgTmr)
+				} else {
+					delete(timersRunningMap, msgTmr)
+				}
+			})
+		case plcdMsg := <-placedMessageReceived:
+			timersRunningMap[plcdMsg] = false
 		}
 	}
 }

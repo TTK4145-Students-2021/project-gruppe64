@@ -33,13 +33,14 @@ func main() {
 	//own modules
 
 	messageTimerCh := make(chan system.SendingOrder)
+	placedMessageReceivedCh := make(chan system.SendingOrder)
 	messageTimerTimedOutCh := make(chan system.SendingOrder)
 	orderTimerCh := make(chan system.SendingOrder)
 	orderTimerTimedOutCh := make(chan system.SendingOrder)
 
 	// Timers:
 	go timer.RunDoorTimer(doorTimerDurationCh, doorTimerTimedOutCh)
-	go timer.RunMessageTimer(messageTimerCh, messageTimerTimedOutCh)
+	go timer.RunMessageTimer(messageTimerCh, placedMessageReceivedCh, messageTimerTimedOutCh)
 	go timer.RunOrderTimer(orderTimerCh, orderTimerTimedOutCh)
 
 	// Hardware:
@@ -50,7 +51,7 @@ func main() {
 	go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, ownElevatorCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh)
 
 	//Network:
-	go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, messageTimerCh, orderToSelfCh)
+	go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, placedMessageReceivedCh, orderToSelfCh)
 	go sendandreceive.InformationSharingThroughNet(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh)
 	for {}
 }
