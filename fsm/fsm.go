@@ -33,10 +33,11 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 
 		select {
 		case btnE := <-orderToSelf:
+			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
 			if obstruction{
+				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				break
 			}
-			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
 			switch elevator.Behaviour{
 			case system.EB_DoorOpen:
 				if elevator.Floor == btnE.Floor {
@@ -118,11 +119,10 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 			}
 			ownElevator <- elevator
 		case obstrE := <-obstructionEvent:
-			if obstrE{
-				obstruction = true
-			} else {
-				obstruction = false
-				doorTimerDuration <- elevator.Config.DoorOpenDurationSec
+			obstruction = obstrE
+			if elevator.Behaviour == system.MD_Stop && !obstrE{
+				hardwareIO.SetDoorOpenLamp(true)
+				elevator.Behaviour = system.EB_DoorOpen
 			}
 		}
 	}
