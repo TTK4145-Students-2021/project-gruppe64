@@ -120,7 +120,7 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 			ownElevator <- elevator
 		case obstrE := <-obstructionEvent:
 			obstruction = obstrE
-			if elevator.Behaviour == system.MD_Stop && !obstrE{
+			if elevator.Behaviour == system.MD_Stop && obstrE{
 				hardwareIO.SetDoorOpenLamp(true)
 				elevator.Behaviour = system.EB_DoorOpen
 			}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
+	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/system"
 	"strconv"
 )
@@ -113,6 +114,8 @@ func removeExecutedOrders(elev system.ElevatorInformation, distributedOrds []sys
 	for _, dOrds := range distributedOrds{
 		if !checkIfOrderExecuted(elev, dOrds){
 			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)
+		} else {
+			hardwareIO.SetButtonLamp(dOrds.Order.Button, dOrds.Order.Floor)
 		}
 	}
 	return updatedDistributedOrds
