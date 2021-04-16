@@ -8,9 +8,9 @@ import (
 
 
 func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- system.Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool){
-	elevator := system.Elevator{}
+	var elevator system.Elevator
 	obstruction := false
-
+	elevator = system.GetLoggedElevator()
 	select {
 	case flrA :=<- floorArrival: // If the floor sensor registers a floor at initialization
 		elevator.Floor = flrA

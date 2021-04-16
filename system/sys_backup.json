@@ -1,0 +1,31 @@
+{
+ "Floor": 3,
+ "MotorDirection": 0,
+ "Orders": [
+  [
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   0,
+   0
+  ]
+ ],
+ "Behaviour": 0,
+ "Config": {
+  "ClearOrdersVariant": 1,
+  "DoorOpenDurationSec": 3
+ }
+}

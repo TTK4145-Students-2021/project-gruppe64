@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
-	"realtimeProject/project-gruppe64/system"
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"realtimeProject/project-gruppe64/system"
 	"strconv"
 )
 
@@ -19,7 +19,6 @@ func initiateElevatorsTagged() system.ElevatorsTagged{
 	elevs.States = statesMap
 	return elevs
 }
-
 
 func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagged{
 	var behaviourString string
@@ -57,7 +56,7 @@ func getUpdatedElevatorTagged(e system.ElevatorInformation) system.ElevatorTagge
 	return system.ElevatorTagged{Behaviour: behaviourString, Floor: e.Floor, MotorDirection: motorDirString, CabOrders: cabOrds}
 }
 
-func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.ElevatorsTagged{
+func removeOfflineElevators(elevs system.ElevatorsTagged) system.ElevatorsTagged{
 	retStates := make(map[string]system.ElevatorTagged)
 	for elevKey, elevTagged := range elevs.States{
 		if elevTagged.Behaviour != "" {
@@ -67,8 +66,16 @@ func removeElevatorsWithoutInformation(elevs system.ElevatorsTagged) system.Elev
 	return system.ElevatorsTagged{HallOrders: elevs.HallOrders, States: retStates}
 }
 
-func getDesignatedElevatorID(elevs system.ElevatorsTagged) int {
-	elevsEncoded, errM := json.Marshal(removeElevatorsWithoutInformation(elevs))
+func getDesignatedElevatorID(elevs system.ElevatorsTagged, elevsOffline map[string]bool) int {
+	costElevs := elevs
+
+	for ID, Offline := range elevsOffline {
+		if Offline {
+			costElevs.States[ID] = system.ElevatorTagged{}
+		}
+	}
+
+	elevsEncoded, errM := json.Marshal(removeOfflineElevators(costElevs))
 	if errM != nil {
 		log.Fatal(errM)
 	}
@@ -144,3 +151,4 @@ func setHallButtonLights(elevInfo system.ElevatorInformation){
 		}
 	}
 }
+
