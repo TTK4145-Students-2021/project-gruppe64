@@ -124,6 +124,7 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 				hardwareIO.SetDoorOpenLamp(true)
 				elevator.Behaviour = system.EB_DoorOpen
 			}
+
 			if !obstruction {
 				doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 				break
