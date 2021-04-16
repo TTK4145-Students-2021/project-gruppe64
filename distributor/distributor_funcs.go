@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
-	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/system"
+	"realtimeProject/project-gruppe64/hardwareIO"
 	"strconv"
 )
 
@@ -115,7 +115,7 @@ func removeExecutedOrders(elev system.ElevatorInformation, distributedOrds []sys
 		if !checkIfOrderExecuted(elev, dOrds){
 			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)
 		} else {
-			hardwareIO.SetButtonLamp(dOrds.Order.Button, dOrds.Order.Floor)
+
 		}
 	}
 	return updatedDistributedOrds
@@ -131,4 +131,16 @@ func removeOrderFromOrders(orderToRemove system.SendingOrder, orders []system.Se
 		}
 	}
 	return retOrders
+}
+
+func setHallButtonLights(elevInfo system.ElevatorInformation){
+	for f := 0; f < system.NumFloors; f++ {
+		for b := 0; b < system.NumButtons - 1; b++  {
+			if elevInfo.Orders[f][b] != 0 {
+				hardwareIO.SetButtonLamp(system.ButtonType(b), f, true)
+			} else {
+				hardwareIO.SetButtonLamp(system.ButtonType(b), f, false)
+			}
+		}
+	}
 }

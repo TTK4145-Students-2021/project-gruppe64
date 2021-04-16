@@ -18,6 +18,7 @@ func setAllButtonLights(e system.Elevator){
 	}
 }
 
+
 func orderAbove(e system.Elevator) bool {
 	for f := e.Floor+1; f < system.NumFloors; f++ {
 		for b := 0; b < system.NumButtons; b++ {

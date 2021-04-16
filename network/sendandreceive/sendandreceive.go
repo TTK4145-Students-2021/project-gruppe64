@@ -2,7 +2,6 @@ package sendandreceive
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/network/bcast"
 	"realtimeProject/project-gruppe64/system"
 
@@ -67,9 +66,10 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 				orderToSelf <- netReceive.Order
 				for i := 0; i < resendNum; i++ {
 					networkSend <- netReceive //As placed message }
+
 				}
 			} else {
-				hardwareIO.SetButtonLamp(netReceive.Order.Button, netReceive.Order.Floor,true)
+
 			}
 		}
 	}
