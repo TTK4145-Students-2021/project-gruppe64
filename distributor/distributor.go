@@ -9,6 +9,7 @@ import (
 // GOROUTINE:
 func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan system.ElevatorInformation, ownElevator <-chan system.Elevator, sendingOrderThroughNet chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.SendingOrder, messageTimerTimedOut <-chan system.SendingOrder, orderTimer chan<- system.SendingOrder, orderTimerTimedOut <- chan system.SendingOrder){
 	elevs := initiateElevatorsTagged()
+	disconnectedElevators := make(map[string]system.ElevatorInformation)
 	distributedOrders := make(map[string][]system.SendingOrder)
 	for {
 		select {
@@ -70,11 +71,13 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			elevs.States[strconv.Itoa(system.ElevatorID)] = getUpdatedElevatorTagged(system.ElevatorInformation{ID: system.ElevatorID, Floor: elev.Floor, MotorDirection: elev.MotorDirection, Orders: elev.Orders, Behaviour: elev.Behaviour})
 
 		case elevInfo := <-elevatorInfo:
-			setHallButtonLights(elevInfo)
-			if removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)]) != nil{ //måtte legge til dette for å ikke få feilmelding
-				distributedOrders[strconv.Itoa(elevInfo.ID)] = removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)])
+			if elevInfo.ID != system.ElevatorID {
+				setHallButtonLights(elevInfo)
+				if removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)]) != nil{ //måtte legge til dette for å ikke få feilmelding
+					distributedOrders[strconv.Itoa(elevInfo.ID)] = removeExecutedOrders(elevInfo, distributedOrders[strconv.Itoa(elevInfo.ID)])
+				}
+				elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 			}
-			elevs.States[strconv.Itoa(elevInfo.ID)] = getUpdatedElevatorTagged(elevInfo)
 		}
 	}
 }

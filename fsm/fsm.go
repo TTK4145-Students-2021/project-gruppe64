@@ -113,7 +113,6 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 					}
 					break
 				default:
-					fmt.Printf("\n Timer timed out but nothing happend.:\n")
 					break
 				}
 			}

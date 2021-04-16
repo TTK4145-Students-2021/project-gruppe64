@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"realtimeProject/project-gruppe64/network/bcast"
 	"realtimeProject/project-gruppe64/system"
-
+	"time"
 )
 
 const (
@@ -57,7 +57,7 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 			if sOrdNet.ReceivingElevatorID == threadElevatorID {
 				fmt.Printf("Order sent through network: %#v\n", sOrdNet)
 				for i := 0; i < resendNum; i++ {
-					//time.Sleep(1 * time.Millisecond)
+					time.Sleep(1 * time.Millisecond)
 					networkSend <- sOrdNet
 				}
 			}
