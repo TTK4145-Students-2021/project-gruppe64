@@ -1,6 +1,6 @@
 package messages
 
-import (
+/*import (
 	"../../../../fsm2"
 	"../../../../hardwareIO"
 	"../localip"
@@ -133,8 +133,8 @@ func SendReceiveOrders(elevStructSent chan  ElevatorInformation, orderSent chan 
 			//should save the different IP-adresses and elevatorIDs in some way. IP is not really needed since we have
 			//designated listeningports
 			fmt.Printf("Peer update:\n")
-			//fmt.Printf("  Peers:    %q\n", p.Peers)
-			//fmt.Printf("  New:      %q\n", p.New) //don't feel like this is needed, so I removed it
+			fmt.Printf("  Peers:    %q\n", p.Peers)
+			fmt.Printf("  New:      %q\n", p.New) //don't feel like this is needed, so I removed it
 			//fmt.Printf("  Lost:     %q\n", p.Lost)
 
 		case a := <-elevStructSent:
@@ -153,3 +153,4 @@ func SendReceiveOrders(elevStructSent chan  ElevatorInformation, orderSent chan 
 		}
 	}
 }
+*/

@@ -76,7 +76,7 @@ func UpdatePeer(elevatorID int) string{
 	}
 	return fmt.Sprintf("Elevator ID: %d, IP: %s-%d", elevatorID, localIP, os.Getpid())
 }
-
+/*
 func GetReceiverAndTransmitterPorts(elevatorID int, elevStructSent chan Elevator, orderSent chan OrderToSend, peerGet chan peers.PeerUpdate,
 	orderToSend chan OrderToSend, elevatorToSend chan Elevator, peerTXEnable chan bool){
 	peerUpdate := UpdatePeer(elevatorID)
@@ -89,7 +89,7 @@ func GetReceiverAndTransmitterPorts(elevatorID int, elevStructSent chan Elevator
 	//go bcast.Receiver(elevatorID + 19997, elevStructSent)
 	go bcast.Receiver(elevatorID + 20000, orderSent)
 }
-
+*/
 
 
 func GetReceiverAndTransmitterPorts(elevatorID int, elevStructSent chan ElevatorInformation, orderSent chan OrderToSend, peerGet chan peers.PeerUpdate,
@@ -133,8 +133,8 @@ func SendReceiveOrders(elevStructSent chan  ElevatorInformation, orderSent chan 
 			//should save the different IP-adresses and elevatorIDs in some way. IP is not really needed since we have
 			//designated listeningports
 			fmt.Printf("Peer update:\n")
-			//fmt.Printf("  Peers:    %q\n", p.Peers)
-			//fmt.Printf("  New:      %q\n", p.New) //don't feel like this is needed, so I removed it
+			fmt.Printf("  Peers:    %q\n", p.Peers)
+			fmt.Printf("  New:      %q\n", p.New) //don't feel like this is needed, so I removed it
 			//fmt.Printf("  Lost:     %q\n", p.Lost)
 
 		case a := <-elevStructSent:

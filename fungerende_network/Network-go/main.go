@@ -2,9 +2,11 @@
 package main
 
 import (
-	//"Network-go/network/bcast"
+	"../../fsm2"
+	"../../hardwareIO"
 	"./network/peers"
 	"./network/sendandreceive"
+	"flag"
 	"fmt"
 )
 
@@ -16,32 +18,46 @@ import (
 //20003: for sending orders to elevator3
 
 func main() {
+	//setting elevator ID:
+	var id string
+	flag.StringVar(&id, "id", "", "id of this peer")
+	flag.Parse()
+
+	//var idInt int
+	//flag.IntVar(&idInt, "idInt", 0, "id int of this peer")
+	//flag.Parse()
+	// Our id can be anything. Here we pass it on the command line, using
+	//  `go run main.go -id=our_id` VERY IMPORTANT TO WRITE -id=our_id NOT -id = our_id
+	// for idInt: -id int=our_id
+
 	//test order
-	testOrder := sendandreceive.OrderToSend{ReceivingElevatorID: 2, SendingElevatorID: 1}
-	testOrder.Order[0] = 1
-	testOrder.Order[1] = 3
+	buttonEvent := hardwareIO.ButtonEvent{Floor:2,Button:1}
+	testOrder := sendandreceive.OrderToSend{ReceivingElevatorID: "2", SendingElevatorID: id, Order: buttonEvent}
 
 	//test elevator
-	elevator := sendandreceive.Elevator{ID: 2, MotorDirection: 1, Behaviour: "EB_idle"}
-	elevator.Orders[2][3] = 1
-	elevator.Orders[1][1] = 1
 
-	// We make a channel for receiving updates on the id's of the peers that are
-	//  alive on the network
+	fsm2Elevator := fsm2.Elevator{Floor: 2, MotorDirection: 2,Behaviour: fsm2.EB_Moving}
+	fsm2Elevator.Orders[2][0] = 1
+	fsm2Elevator.Orders[0][0] = 1
+	fsm2Elevator.Orders[1][0] = 1
+	fsm2Elevator.Orders[3][0] = 1
+
+	elevator := sendandreceive.FSMElevatorToElevatorNetwork(fsm2Elevator, id)
+	fmt.Printf("%#v", elevator)
+
 	peerUpdateCh := make(chan peers.PeerUpdate)
-	// We can disable/enable the transmitter after it has been started.
-	// This could be used to signal that we are somehow "unavailable".
 	peerTxEnable := make(chan bool)
-	// We make channels for sending and receiving our custom data types
-	elevStructToSend := make(chan sendandreceive.Elevator)
-	elevStructSent := make(chan sendandreceive.Elevator)
-
+	elevStructToSend := make(chan sendandreceive.ElevatorInformation)
+	elevStructSent := make(chan sendandreceive.ElevatorInformation)
 	orderToSend := make(chan sendandreceive.OrderToSend)
 	orderSent := make(chan sendandreceive.OrderToSend)
 
-	go sendandreceive.GetReceiverAndTransmitterPorts(elevator.ID, elevStructSent, orderSent, peerUpdateCh, orderToSend, elevStructToSend, peerTxEnable)
+	orderBack := make(chan sendandreceive.OrderToSend)
+	orderBackSent := make(chan sendandreceive.OrderToSend)
+	//før var id elevator.ID
+	go sendandreceive.GetReceiverAndTransmitterPorts(id, elevStructSent, orderSent, peerUpdateCh, orderToSend, elevStructToSend, peerTxEnable, orderBack, orderBackSent)
 	go sendandreceive.BroadcastElevator(elevStructToSend, elevator) //will broadcast elevatorstruct each second
 	go sendandreceive.SendOrder(orderToSend, testOrder, peerTxEnable)
 	fmt.Println("Started")
-	sendandreceive.SendReceiveOrders(elevStructSent, orderSent, orderSent, peerUpdateCh)
+	sendandreceive.SendReceiveOrders(elevStructSent, orderSent, peerUpdateCh, orderBack, orderBackSent)
 }
