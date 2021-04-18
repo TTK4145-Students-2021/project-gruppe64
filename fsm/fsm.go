@@ -22,7 +22,7 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 	default: // If no floor is detected by the floor sensor
 		elevator.Floor = -1
 		elevator.MotorDirection = system.MD_Down
-		hardwareIO.SetMotorDirection(system.MD_Down) // change to hardwareIO.SetMotorDirection(elevator.Motordirection)?
+		hardwareIO.SetMotorDirection(system.MD_Down)
 		elevator.Behaviour = system.EB_Moving
 		elevator.Config.ClearOrdersVariant = system.CO_InMotorDirection
 		elevator.Config.DoorOpenDurationSec = 3.0

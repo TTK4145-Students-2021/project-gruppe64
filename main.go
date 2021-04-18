@@ -6,6 +6,7 @@ import (
 	"realtimeProject/project-gruppe64/distributor"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"realtimeProject/project-gruppe64/network/peers"
 	"realtimeProject/project-gruppe64/network/sendandreceive"
 	"realtimeProject/project-gruppe64/system"
 	"realtimeProject/project-gruppe64/timer"
@@ -23,6 +24,7 @@ func primaryWork(activateAsPrimary <-chan bool){
 				hardwareIO.Init(system.LocalHost, system.NumFloors)
 				system.SpawnBackup()
 
+
 				orderToSelfCh := make(chan system.ButtonEvent)
 				hallOrderCh := make(chan system.ButtonEvent)
 				floorArrivalCh := make(chan int)
@@ -38,6 +40,7 @@ func primaryWork(activateAsPrimary <-chan bool){
 				networkReceiveCh := make(chan system.SendingOrder)
 				elevatorIDConnectedCh := make(chan int) //DENNE HG, sender id til heis når connected
 				elevatorIDDisconnectedCh := make(chan int) //DENNE HG, sender id til heis når disconnected
+				receivePeersCh := make(chan peers.PeerUpdate)
 
 
 				sendingOrderThroughNetCh := make(chan system.SendingOrder) //channel that receives
@@ -63,8 +66,9 @@ func primaryWork(activateAsPrimary <-chan bool){
 				go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, ownElevatorCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh, elevatorIDConnectedCh, elevatorIDDisconnectedCh)
 
 				//Network:
-				go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, placedMessageReceivedCh, orderToSelfCh)
+				go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, placedMessageReceivedCh, orderToSelfCh, receivePeersCh)
 				go sendandreceive.InformationSharingThroughNet(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh)
+				go sendandreceive.GetPeers(receivePeersCh, elevatorIDConnectedCh, elevatorIDDisconnectedCh)
 
 				docNum := 0
 				for {
@@ -81,6 +85,7 @@ func primaryWork(activateAsPrimary <-chan bool){
 
 
 
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	activateAsPrimaryCh := make(chan bool)
@@ -93,5 +98,7 @@ func main() {
 		go primaryWork(activateAsPrimaryCh)
 		activateAsPrimaryCh <- true
 	}
+
+
 	for {}
 }

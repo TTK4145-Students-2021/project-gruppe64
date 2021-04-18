@@ -3,7 +3,10 @@ package sendandreceive
 import (
 	"fmt"
 	"realtimeProject/project-gruppe64/network/bcast"
+	"realtimeProject/project-gruppe64/network/peers"
 	"realtimeProject/project-gruppe64/system"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,7 +17,13 @@ const (
 
 
 func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.ElevatorInformation, broadcastElevatorInfo chan system.ElevatorInformation,
-	networkReceive chan system.SendingOrder, sendingOrderThroughNet <-chan system.SendingOrder, placedMessageReceived chan<- system.SendingOrder, orderToSelf chan<- system.ButtonEvent){
+	networkReceive chan system.SendingOrder, sendingOrderThroughNet <-chan system.SendingOrder, placedMessageReceived chan<- system.SendingOrder,
+	orderToSelf chan<- system.ButtonEvent, receivePeers chan peers.PeerUpdate){
+
+	transmitPeerBoolCh := make(chan bool)
+
+	go peers.Transmitter(59999, strconv.Itoa(system.ElevatorID), transmitPeerBoolCh)
+	go peers.Receiver(59999, receivePeers)
 
 	go bcast.Receiver(60000, receiveElevatorInfo) //Receive others elevator information
 	go bcast.Transmitter(60000, broadcastElevatorInfo) //Send elevator Information
@@ -79,5 +88,29 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 	}
 }
 
+func GetPeers(receivePeers <-chan peers.PeerUpdate, elevatorIDConnected chan <- int, elevatorIDDisconnected chan <- int) { //bør ID-ene være int eller string?
+	for {
+		select {
+		case recPeer := <-receivePeers:
+			fmt.Printf("Peer update:\n")
+			fmt.Printf("  Peers:    %q\n", recPeer.Peers)
+			fmt.Printf("  New:      %q\n", recPeer.New)
+			fmt.Printf("  Lost:     %q\n", recPeer.Lost)
 
+			peer_lost := strings.Join(recPeer.Lost, "") //må endre fra []string til string
 
+			//hvis jeg får en ny bestilling OG den ikke er vår egen heis skal noe printes
+			if recPeer.New != "" && recPeer.New != strconv.Itoa(system.ElevatorID) {
+				fmt.Println("New peer ID: " + recPeer.New)
+				newSentID, _ := strconv.Atoi(recPeer.New)
+				elevatorIDConnected <- newSentID
+			}
+			if peer_lost != "" {
+				fmt.Println("Peer lost: " + peer_lost)
+				lostSentID, _ := strconv.Atoi(peer_lost)
+				elevatorIDDisconnected <- lostSentID
+			}
+
+		}
+	}
+}
