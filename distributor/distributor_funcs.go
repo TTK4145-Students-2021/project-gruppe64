@@ -80,6 +80,8 @@ func getDesignatedElevatorID(elevs system.ElevatorsTagged, elevsOffline map[stri
 		log.Fatal(errM)
 	}
 	costCmd := exec.Command("./distributor/hall_request_assigner.exe", "--input",  string(elevsEncoded))
+	// LINUX:
+	// costCmd := exec.Command("./distributor/hall_request_assigner", "--input",  string(elevsEncoded))
 	out, errO := costCmd.Output()
 	if errO != nil {
 		log.Fatal(errO)

@@ -18,6 +18,8 @@ var _mtx sync.Mutex
 func SpawnBackup() {
 	_mtx = sync.Mutex{}
 	err := exec.Command("cmd", "/C", "start", "powershell", "go", "run", "main.go").Run()
+	//LINUX:
+	// err := exec.Command("gnome-terminal", "-x", "go", "run", "main.go").Run()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -59,7 +61,7 @@ func LogElevator(elevInfo Elevator) {
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	jsonFile, _ := json.MarshalIndent(elevInfo, "", " ")
-	err := ioutil.WriteFile("system/sys_backup"+strconv.Itoa(ElevatorID)+".json", jsonFile, 0644)
+	err := ioutil.WriteFile("system/sys_log"+strconv.Itoa(ElevatorID)+".json", jsonFile, 0644)
 	if err !=nil {
 		fmt.Println(err)
 	}
@@ -69,7 +71,7 @@ func LogElevator(elevInfo Elevator) {
 func GetLoggedElevator() Elevator{
 	_mtx.Lock()
 	defer _mtx.Unlock()
-	jsonFile, err := os.Open("system/sys_backup"+strconv.Itoa(ElevatorID)+".json")
+	jsonFile, err := os.Open("system/sys_log"+strconv.Itoa(ElevatorID)+".json")
 	if err != nil {
 		fmt.Println(err)
 	}
