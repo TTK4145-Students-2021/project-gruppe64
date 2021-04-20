@@ -7,7 +7,7 @@ import (
 )
 
 const(
-	messageTimerDuration = 4 //sek
+	messageTimerDuration = 1 //sek
 	orderTimerDuration = 20 //sek
 )
 
