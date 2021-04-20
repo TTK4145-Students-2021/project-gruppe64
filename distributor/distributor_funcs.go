@@ -148,7 +148,9 @@ func setHallButtonLights(elevInfo system.ElevatorInformation){
 			if elevInfo.Orders[f][b] != 0 {
 				hardwareIO.SetButtonLamp(system.ButtonType(b), f, true)
 			} else {
-				if system.GetLoggedElevator().Orders[f][b] != 1 {
+				if system.GetLoggedElevator().Orders[f][b] != 0 {
+					continue
+				} else {
 					hardwareIO.SetButtonLamp(system.ButtonType(b), f, false)
 				}
 			}
