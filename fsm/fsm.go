@@ -2,15 +2,24 @@ package fsm
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/system"
+	"realtimeProject/project-gruppe64/hardwareIO"
 )
+
+/*
+import (
+	"../hardwareIO"
+	"../system"
+	"fmt"
+)
+ */
 
 
 func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- system.Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool){
 	var elevator system.Elevator
 	obstruction := false
-	elevator = system.GetLoggedElevator()
+	elevator.ID = system.ElevatorID
+	elevator.Orders = system.GetLoggedOrders()
 	select {
 	case flrA :=<- floorArrival: // If the floor sensor registers a floor at initialization
 		elevator.Floor = flrA
@@ -30,7 +39,6 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 	}
 
 	for{
-
 		select {
 		case btnE := <-orderToSelf:
 			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
@@ -38,15 +46,15 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				break
 			}
-			switch elevator.Behaviour{
+			switch elevator.Behaviour {
 			case system.EB_DoorOpen:
 				if elevator.Floor == btnE.Floor {
 					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 				} else {
 					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				}
-
 				break
+
 			case system.EB_Moving:
 				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 				break
@@ -55,6 +63,7 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 					hardwareIO.SetDoorOpenLamp(true)
 					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
 					elevator.Behaviour = system.EB_DoorOpen
+					hardwareIO.SetMotorDirection(system.MD_Stop)
 				} else {
 					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
 					elevator.MotorDirection = chooseDirection(elevator)
@@ -81,8 +90,10 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 					elevator.Behaviour = system.EB_DoorOpen
 				} else if elevator.Floor == 0{
 					elevator.MotorDirection = system.MD_Up
+					hardwareIO.SetMotorDirection(system.MD_Up)
 				} else if elevator.Floor == 3 {
 					elevator.MotorDirection = system.MD_Down
+					hardwareIO.SetMotorDirection(system.MD_Down)
 				} else if obstruction{
 					hardwareIO.SetMotorDirection(system.MD_Stop)
 					hardwareIO.SetDoorOpenLamp(true)

@@ -14,6 +14,22 @@ import (
 	"time"
 )
 
+/*
+import (
+	"./distributor"
+	"./fsm"
+	"./hardwareIO"
+	"./network/peers"
+	"./network/sendandreceive"
+	"./system"
+	"./timer"
+	"io/ioutil"
+	"runtime"
+	"strconv"
+	"time"
+)
+*/
+
 func primaryWork(activateAsPrimary <-chan bool){
 	for{
 		select{
@@ -32,23 +48,23 @@ func primaryWork(activateAsPrimary <-chan bool){
 				ownElevatorCh := make(chan system.Elevator)
 
 				//Network channels for transmitting and receiving
-				receiveElevatorInfoCh := make(chan system.ElevatorInformation)
-				broadcastElevatorInfoCh := make(chan system.ElevatorInformation)
-				networkReceiveCh := make(chan system.SendingOrder)
+				receiveElevatorInfoCh := make(chan system.Elevator)
+				broadcastElevatorInfoCh := make(chan system.Elevator)
+				networkReceiveCh := make(chan system.NetOrder)
 				elevatorIDConnectedCh := make(chan int, system.NumElevators - 1) //DENNE HG, sender id til heis når connected
 				elevatorIDDisconnectedCh := make(chan int, system.NumElevators - 1) //DENNE HG, sender id til heis når disconnected
 				receivePeersCh := make(chan peers.PeerUpdate)
 
 
-				sendingOrderThroughNetCh := make(chan system.SendingOrder) //channel that receives
-				elevatorInfoCh := make(chan system.ElevatorInformation) //channel with elevatorinformation, sent from networkmodule to
+				sendingOrderThroughNetCh := make(chan system.NetOrder) //channel that receives
+				elevatorInfoCh := make(chan system.Elevator) //channel with elevatorinformation, sent from networkmodule to
 				//own modules
 
-				messageTimerCh := make(chan system.SendingOrder)
-				placedMessageReceivedCh := make(chan system.SendingOrder)
-				messageTimerTimedOutCh := make(chan system.SendingOrder)
-				orderTimerCh := make(chan system.SendingOrder)
-				orderTimerTimedOutCh := make(chan system.SendingOrder)
+				messageTimerCh := make(chan system.NetOrder)
+				placedMessageReceivedCh := make(chan system.NetOrder)
+				messageTimerTimedOutCh := make(chan system.NetOrder)
+				orderTimerCh := make(chan system.NetOrder)
+				orderTimerTimedOutCh := make(chan system.NetOrder)
 
 				// Timers:
 				go timer.RunDoorTimer(doorTimerDurationCh, doorTimerTimedOutCh)
@@ -74,8 +90,6 @@ func primaryWork(activateAsPrimary <-chan bool){
 					docNum += 1
 				}
 			}
-		default:
-			break
 		}
 	}
 }

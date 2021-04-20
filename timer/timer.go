@@ -6,8 +6,16 @@ import (
 	"time"
 )
 
+/*
+import (
+	"../system"
+	"fmt"
+	"time"
+)
+ */
+
 const(
-	messageTimerDuration = 1 //sek
+	messageTimerDuration = 4 //sek
 	orderTimerDuration = 20 //sek
 )
 
@@ -48,8 +56,8 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 //send ordren når message timer startes (når ny melding sendes), og
 //send ordren når acceptance message er mottatt (da slettes timer fra running timers).
 //
-func RunMessageTimer(messageTimer <-chan system.SendingOrder, placedMessageReceived <-chan system.SendingOrder, messageTimerTimedOut chan<- system.SendingOrder){
-	timersRunningMap := make(map[system.SendingOrder]bool)
+func RunMessageTimer(messageTimer <-chan system.NetOrder, placedMessageReceived <-chan system.NetOrder, messageTimerTimedOut chan<- system.NetOrder){
+	timersRunningMap := make(map[system.NetOrder]bool)
 
 	for{
 		select {
@@ -69,7 +77,8 @@ func RunMessageTimer(messageTimer <-chan system.SendingOrder, placedMessageRecei
 	}
 }
 
-func RunOrderTimer(orderTimer <-chan system.SendingOrder, orderTimerTimedOut chan<- system.SendingOrder){
+
+func RunOrderTimer(orderTimer <-chan system.NetOrder, orderTimerTimedOut chan<- system.NetOrder){
 	for{
 		select {
 		case ord := <-orderTimer:

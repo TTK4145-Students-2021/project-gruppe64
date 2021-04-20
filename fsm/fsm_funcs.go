@@ -6,6 +6,14 @@ import (
 	"realtimeProject/project-gruppe64/system"
 )
 
+/*
+import (
+	"../hardwareIO"
+	"../system"
+	"fmt"
+)
+*/
+
 func setAllButtonLights(e system.Elevator){
 	for f := 0; f < system.NumFloors; f++ {
 		for b := 0; b < system.NumButtons; b++  {

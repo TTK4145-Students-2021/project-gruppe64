@@ -6,8 +6,8 @@ const (
 	NumElevators = 2
 
 	//ID for this elevator:
-	ElevatorID = 0
+	ElevatorID =1
 
 	//Server Port:
-	LocalHost = "localhost:15660"
+	LocalHost = "localhost:15661"
 )

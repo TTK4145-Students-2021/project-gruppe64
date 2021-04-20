@@ -9,14 +9,25 @@ import (
 	"time"
 )
 
+/*
+import (
+	"../../system"
+	"../bcast"
+	"../peers"
+	"fmt"
+	"strconv"
+	"time"
+)
+*/
+
 const (
 	resendNum = 10
 	)
 
 
 
-func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.ElevatorInformation, broadcastElevatorInfo chan system.ElevatorInformation,
-	networkReceive chan system.SendingOrder, sendingOrderThroughNet <-chan system.SendingOrder, placedMessageReceived chan<- system.SendingOrder,
+func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.Elevator, broadcastElevatorInfo chan system.Elevator,
+	networkReceive chan system.NetOrder, sendingOrderThroughNet <-chan system.NetOrder, placedMessageReceived chan<- system.NetOrder,
 	orderToSelf chan<- system.ButtonEvent, receivePeers chan peers.PeerUpdate){
 
 	transmitPeerBoolCh := make(chan bool)
@@ -32,7 +43,7 @@ func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.ElevatorIn
 
 	for elevID := 0; elevID < system.NumElevators; elevID++ {
 		if elevID != system.ElevatorID {
-			networkSendCh := make(chan system.SendingOrder) //Reset every run
+			networkSendCh := make(chan system.NetOrder) //Reset every run
 			go bcast.Transmitter(60001 +elevID, networkSendCh) //Transmit orders to place
 			go placeOrderNetworking(elevID, sendingOrderThroughNet, placedMessageReceived,
 				networkSendCh, networkReceive, orderToSelf)
@@ -40,13 +51,13 @@ func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.ElevatorIn
 	}
 
 }
-func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcastElevatorInfo chan <- system.ElevatorInformation, receiveElevatorInfo <- chan system.ElevatorInformation,
-	elevatorInfoCh chan<- system.ElevatorInformation) {
+func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcastElevatorInfo chan <- system.Elevator, receiveElevatorInfo <- chan system.Elevator,
+	elevatorInfoCh chan<- system.Elevator) {
 	for {
 		select {
 		case ownElev := <-ownElevator:
 			//fmt.Printf("Elevatorinfo broadcasted: %#v\n", system.ElevatorInformation{ID: system.ElevatorID, Floor: ownElev.Floor, MotorDirection: ownElev.MotorDirection, Orders: ownElev.Orders, Behaviour: ownElev.Behaviour})
-			broadcastElevatorInfo <- system.ElevatorInformation{ID: system.ElevatorID, Floor: ownElev.Floor, MotorDirection: ownElev.MotorDirection, Orders: ownElev.Orders, Behaviour: ownElev.Behaviour}
+			broadcastElevatorInfo <- system.Elevator{ID: system.ElevatorID, Floor: ownElev.Floor, MotorDirection: ownElev.MotorDirection, Orders: ownElev.Orders, Behaviour: ownElev.Behaviour}
 
 		case rcvElevInfo := <-receiveElevatorInfo:
 			if rcvElevInfo.ID != system.ElevatorID {
@@ -58,7 +69,7 @@ func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcast
 	}
 }
 
-func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan system.SendingOrder, placedMessageRecieved chan<- system.SendingOrder, networkSend chan<- system.SendingOrder, networkReceive <-chan system.SendingOrder, orderToSelf chan<- system.ButtonEvent) {
+func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan system.NetOrder, placedMessageRecieved chan<- system.NetOrder, networkSend chan<- system.NetOrder, networkReceive <-chan system.NetOrder, orderToSelf chan<- system.ButtonEvent) {
 	for {
 		select {
 		case sOrdNet := <-sendingOrderThroughNet:

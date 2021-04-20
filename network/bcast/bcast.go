@@ -1,12 +1,22 @@
 package bcast
 
 import (
+	"encoding/json"
+	"fmt"
+	"net"
 	"realtimeProject/project-gruppe64/network/conn"
+	"reflect"
+)
+
+/*
+import (
+	"../conn"
 	"encoding/json"
 	"fmt"
 	"net"
 	"reflect"
 )
+*/
 
 // Encodes received values from `chans` into type-tagged JSON, then broadcasts
 // it on `port`

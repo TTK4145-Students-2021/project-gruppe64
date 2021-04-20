@@ -37,6 +37,7 @@ const (
 	CO_All    ClearOrdersVariant = 0
 	CO_InMotorDirection                     = 1
 )
+/*
 
 type Elevator struct {
 	Floor          int
@@ -48,6 +49,7 @@ type Elevator struct {
 		DoorOpenDurationSec float64
 	}
 }
+*/
 /////////////////////////////////////////////////////////////////////
 
 
@@ -68,18 +70,22 @@ type ElevatorsTagged struct{
 
 
 /////////////////////////////NETWORK//////////////////////////////////
-type SendingOrder struct{
+type NetOrder struct{
 	ReceivingElevatorID int
 	SendingElevatorID   int
 	Order               ButtonEvent
 }
 
-type ElevatorInformation struct {
+type Elevator struct {
 	ID             int
 	Floor          int
 	MotorDirection MotorDirection
 	Orders         [NumFloors][NumButtons]int
 	Behaviour      ElevatorBehaviour
+	Config         struct{
+		ClearOrdersVariant ClearOrdersVariant
+		DoorOpenDurationSec float64
+	}
 }
 /////////////////////////////////////////////////////////////////////
 
