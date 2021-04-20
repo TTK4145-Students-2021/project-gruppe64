@@ -1,10 +1,10 @@
 package bcast
 
 import (
+	"realtimeProject/project-gruppe64/network/conn"
 	"encoding/json"
 	"fmt"
 	"net"
-	"realtimeProject/project-gruppe64/network/conn"
 	"reflect"
 )
 
@@ -21,6 +21,7 @@ func Transmitter(port int, chans ...interface{}) {
 		}
 		typeNames[i] = reflect.TypeOf(ch).Elem().String()
 	}
+
 	conn := conn.DialBroadcastUDP(port)
 	addr, _ := net.ResolveUDPAddr("udp4", fmt.Sprintf("255.255.255.255:%d", port))
 	for {
@@ -53,7 +54,10 @@ func Receiver(port int, chans ...interface{}) {
 
 		var ttj typeTaggedJSON
 		json.Unmarshal(buf[0:n], &ttj)
-		ch := chansMap[ttj.TypeId]
+		ch, ok := chansMap[ttj.TypeId]
+		if !ok {
+			continue
+		}
 		v := reflect.New(reflect.TypeOf(ch).Elem())
 		json.Unmarshal(ttj.JSON, v.Interface())
 		reflect.Select([]reflect.SelectCase{{
@@ -87,7 +91,7 @@ func checkArgs(chans ...interface{}) {
 		// Must be a channel
 		if reflect.ValueOf(ch).Kind() != reflect.Chan {
 			panic(fmt.Sprintf(
-				"Argument must be a channel, got '%s' instead (arg#%d)",
+				"Argument must be a channel, got '%s' instead (arg# %d)",
 				reflect.TypeOf(ch).String(), i+1))
 		}
 
@@ -97,24 +101,37 @@ func checkArgs(chans ...interface{}) {
 		for j, e := range elemTypes {
 			if e == elemType {
 				panic(fmt.Sprintf(
-					"All channels must have mutually different element types, arg#%d and arg#%d both have element type '%s'",
+					"All channels must have mutually different element types, arg# %d and arg# %d both have element type '%s'",
 					j+1, i+1, e.String()))
 			}
 		}
 		elemTypes[i] = elemType
 
 		// Element type must be encodable with JSON
-		switch elemType.Kind() {
-		case reflect.Complex64, reflect.Complex128, reflect.Chan, reflect.Func, reflect.UnsafePointer:
+		checkTypeRecursive(elemType, []int{i+1})
+
+	}
+}
+
+
+func checkTypeRecursive(val reflect.Type, offsets []int){
+	switch val.Kind() {
+	case reflect.Complex64, reflect.Complex128, reflect.Chan, reflect.Func, reflect.UnsafePointer:
+		panic(fmt.Sprintf(
+			"Channel element type must be supported by JSON, got '%s' instead (nested arg# %v)",
+			val.String(), offsets))
+	case reflect.Map:
+		if val.Key().Kind() != reflect.String {
 			panic(fmt.Sprintf(
-				"Channel element type must be supported by JSON, got '%s' instead (arg#%d)",
-				elemType.String(), i+1))
-		case reflect.Map:
-			if elemType.Key().Kind() != reflect.String {
-				panic(fmt.Sprintf(
-					"Channel element type must be supported by JSON, got '%s' instead (map keys must be 'string') (arg#%d)",
-					elemType.String(), i+1))
-			}
+				"Channel element type must be supported by JSON, got '%s' instead (map keys must be 'string') (nested arg# %v)",
+				val.String(), offsets))
+		}
+		checkTypeRecursive(val.Elem(), offsets)
+	case reflect.Array, reflect.Ptr, reflect.Slice:
+		checkTypeRecursive(val.Elem(), offsets)
+	case reflect.Struct:
+		for idx := 0; idx < val.NumField(); idx++ {
+			checkTypeRecursive(val.Field(idx).Type, append(offsets, idx+1))
 		}
 	}
 }
