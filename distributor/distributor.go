@@ -97,3 +97,16 @@ func OrderDistributor(hallOrder chan system.ButtonEvent, elevatorInfo <-chan sys
 		}
 	}
 }
+
+/*
+func checkForMotorStop(ordersForMotorCheck <-chan [system.NumFloors][system.NumButtons]int, motorStop chan<- bool) {
+	var ordersCheck [system.NumFloors][system.NumButtons]int
+	for {
+		select{
+		case ordForMChck := <-ordersForMotorCheck:
+			ordersCheck = ordForMChck
+			time.AfterFunc(5*time.Second)
+		}
+	}
+}
+*/
