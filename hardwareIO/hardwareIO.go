@@ -6,8 +6,6 @@ import (
 )
 
 
-
-
 func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.ButtonEvent, floorArrival chan<- int, obstructionEvent chan<- bool)  {
 
 	drvButtons := make(chan system.ButtonEvent)
@@ -23,14 +21,14 @@ func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.
 	for {
 		select {
 		case a := <- drvButtons:
-			fmt.Printf("%+v\n", a)
+			//fmt.Printf("%+v\n", a)
 			if a.Button == system.BT_Cab { //Sjekker om til fsm eller til distributor
 				orderToSelf <- a
 			} else {
 				hallOrder <- a
 			}
 		case a := <- drvFloors:
-			fmt.Printf("%+v\n", a)
+			//fmt.Printf("%+v\n", a)
 			floorArrival <- a
 		case a := <- drvObstr:
 			fmt.Printf("%+v\n", a)
