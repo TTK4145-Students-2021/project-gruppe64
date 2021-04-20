@@ -107,6 +107,8 @@ func getDesignatedElevatorID(elevs system.ElevatorsTagged, elevsOffline map[stri
 
 
 
+
+
 func checkIfOrderExecuted(elev system.ElevatorInformation, ord system.SendingOrder) bool {
 	if elev.Orders[ord.Order.Floor][ord.Order.Button] == 1 {
 		return false

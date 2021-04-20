@@ -81,7 +81,6 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 				orderToSelf <- netReceive.Order
 				for i := 0; i < resendNum; i++ {
 					networkSend <- netReceive //As placed message }
-
 				}
 			}
 		}

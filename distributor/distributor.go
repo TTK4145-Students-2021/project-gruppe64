@@ -9,7 +9,7 @@ import (
 // GOROUTINE:
 
 //ENDRE DISTRIBUTOR TIL Å HA GLOBAL VARIABEL ELEVATORS SOM ER ELEVATOR INFORMATION IKKE ELEVATOR TAGGED
-func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan system.ElevatorInformation,
+func OrderDistributor(hallOrder chan system.ButtonEvent, elevatorInfo <-chan system.ElevatorInformation,
 	ownElevator <-chan system.Elevator, sendingOrderThroughNet chan<- system.SendingOrder,
 	orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.SendingOrder,
 	messageTimerTimedOut <-chan system.SendingOrder, orderTimer chan<- system.SendingOrder,
@@ -29,10 +29,11 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			default:
 				break
 			}
-			//NEED to put in some functionality so that if it is not initiated correctly, do not need all
+			fmt.Println(elevators)
+			fmt.Println(disconnectedElevators)
 			designatedID := getDesignatedElevatorID(elevators, disconnectedElevators)
+			fmt.Println(designatedID)
 			if designatedID == system.ElevatorID {
-				fmt.Println("ORDER TO SELF")
 				orderToSelf <- hallOrd
 			} else {
 				sOrd := system.SendingOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID, Order: hallOrd}
@@ -44,7 +45,6 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 				} else {
 					distributedOrders[strconv.Itoa(designatedID)] = []system.SendingOrder{sOrd}
 				}
-
 			}
 			switch hallOrd.Button { //sletter ordren fra her og nå
 			case system.BT_HallUp:
@@ -59,7 +59,8 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, elevatorInfo <-chan s
 			if distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)] != nil {
 				distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)] = removeOrderFromOrders(msgTimedOut, distributedOrders[strconv.Itoa(msgTimedOut.ReceivingElevatorID)])
 			}
-			orderToSelf <- msgTimedOut.Order
+			//Should not send to self, should put in to hall order again:
+			hallOrder <- msgTimedOut.Order
 
 		case ordTimedOut := <-orderTimerTimedOut:
 			for key, dOrds := range distributedOrders {

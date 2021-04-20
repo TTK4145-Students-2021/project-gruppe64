@@ -24,7 +24,7 @@ func SpawnBackup() {
 }
 
 func IsBackup() bool{
-	if _, err := os.Stat("system/primary_doc.txt"); os.IsNotExist(err){
+	if _, err := os.Stat("system/primary_doc"+strconv.Itoa(ElevatorID)+".txt"); os.IsNotExist(err){
 		return false
 	} else {
 		return true
@@ -33,10 +33,10 @@ func IsBackup() bool{
 
 func CheckPrimaryExistence(activateAsPrimary chan<- bool) {
 	for {
-		data1, _ := ioutil.ReadFile("system/primary_doc.txt")
+		data1, _ := ioutil.ReadFile("system/primary_doc"+strconv.Itoa(ElevatorID)+".txt")
 		num1, _ := strconv.Atoi(string(data1))
 		time.Sleep(3*time.Second)
-		data2, _ := ioutil.ReadFile("system/primary_doc.txt")
+		data2, _ := ioutil.ReadFile("system/primary_doc"+strconv.Itoa(ElevatorID)+".txt")
 		num2, _ := strconv.Atoi(string(data2))
 		if num1 == num2 {
 			activateAsPrimary <- true
@@ -46,7 +46,7 @@ func CheckPrimaryExistence(activateAsPrimary chan<- bool) {
 }
 
 func MakeBackupFile() {
-	file, err := os.Create("system/primary_doc.txt")
+	file, err := os.Create("system/primary_doc"+strconv.Itoa(ElevatorID)+".txt")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -59,7 +59,7 @@ func LogElevator(elevInfo Elevator) {
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	jsonFile, _ := json.MarshalIndent(elevInfo, "", " ")
-	err := ioutil.WriteFile("system/sys_backup.json", jsonFile, 0644)
+	err := ioutil.WriteFile("system/sys_backup"+strconv.Itoa(ElevatorID)+".json", jsonFile, 0644)
 	if err !=nil {
 		fmt.Println(err)
 	}
@@ -69,7 +69,7 @@ func LogElevator(elevInfo Elevator) {
 func GetLoggedElevator() Elevator{
 	_mtx.Lock()
 	defer _mtx.Unlock()
-	jsonFile, err := os.Open("system/sys_backup.json")
+	jsonFile, err := os.Open("system/sys_backup"+strconv.Itoa(ElevatorID)+".json")
 	if err != nil {
 		fmt.Println(err)
 	}

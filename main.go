@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"realtimeProject/project-gruppe64/distributor"
 	"realtimeProject/project-gruppe64/fsm"
@@ -20,10 +19,8 @@ func primaryWork(activateAsPrimary <-chan bool){
 		select{
 		case activate := <-activateAsPrimary:
 			if activate{
-				fmt.Println(activate)
 				hardwareIO.Init(system.LocalHost, system.NumFloors)
 				system.SpawnBackup()
-
 
 				orderToSelfCh := make(chan system.ButtonEvent)
 				hallOrderCh := make(chan system.ButtonEvent)
@@ -72,7 +69,7 @@ func primaryWork(activateAsPrimary <-chan bool){
 
 				docNum := 0
 				for {
-					_ = ioutil.WriteFile("system/primary_doc.txt", []byte(strconv.FormatInt(int64(docNum), 10)), 0644)
+					_ = ioutil.WriteFile("system/primary_doc"+strconv.Itoa(system.ElevatorID)+".txt", []byte(strconv.FormatInt(int64(docNum), 10)), 0644)
 					time.Sleep(1*time.Second)
 					docNum += 1
 				}
@@ -98,7 +95,6 @@ func main() {
 		go primaryWork(activateAsPrimaryCh)
 		activateAsPrimaryCh <- true
 	}
-
 
 	for {}
 }
