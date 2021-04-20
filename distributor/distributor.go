@@ -1,6 +1,9 @@
 package distributor
 
-import "realtimeProject/project-gruppe64/system"
+import (
+	"fmt"
+	"realtimeProject/project-gruppe64/system"
+)
 
 /*
 import (
@@ -40,11 +43,23 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan 
 			}
 
 		case msgTimedOut := <-messageTimerTimedOut:
+			fmt.Println("reassigning")
 			if distributedOrders[msgTimedOut.ReceivingElevatorID] != nil {
 				distributedOrders[msgTimedOut.ReceivingElevatorID] = removeOrderFromOrders(msgTimedOut, distributedOrders[msgTimedOut.ReceivingElevatorID])
 			}
-			//Should not send to self, should put in to hall order again:
-			orderToSelf <- msgTimedOut.Order
+			designatedID := getDesignatedElevatorID(msgTimedOut.Order, elevators, elevatorsOnline)
+			if designatedID == system.ElevatorID {
+				orderToSelf <- msgTimedOut.Order
+			} else {
+				sOrd := system.NetOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID, Order: msgTimedOut.Order}
+				orderThroughNet <- sOrd
+				messageTimer <- sOrd
+				if distributedOrders[designatedID] != nil {
+					distributedOrders[designatedID] = append(distributedOrders[designatedID], sOrd)
+				} else {
+					distributedOrders[designatedID] = []system.NetOrder{sOrd}
+				}
+			}
 
 		case ordTimedOut := <-orderTimerTimedOut:
 			for key, dOrds := range distributedOrders {
