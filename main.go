@@ -35,8 +35,8 @@ func primaryWork(activateAsPrimary <-chan bool){
 				receiveElevatorInfoCh := make(chan system.ElevatorInformation)
 				broadcastElevatorInfoCh := make(chan system.ElevatorInformation)
 				networkReceiveCh := make(chan system.SendingOrder)
-				elevatorIDConnectedCh := make(chan int) //DENNE HG, sender id til heis når connected
-				elevatorIDDisconnectedCh := make(chan int) //DENNE HG, sender id til heis når disconnected
+				elevatorIDConnectedCh := make(chan int, system.NumElevators - 1) //DENNE HG, sender id til heis når connected
+				elevatorIDDisconnectedCh := make(chan int, system.NumElevators - 1) //DENNE HG, sender id til heis når disconnected
 				receivePeersCh := make(chan peers.PeerUpdate)
 
 

@@ -6,7 +6,6 @@ import (
 	"realtimeProject/project-gruppe64/network/peers"
 	"realtimeProject/project-gruppe64/system"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -96,17 +95,15 @@ func GetPeers(receivePeers <-chan peers.PeerUpdate, elevatorIDConnected chan <- 
 			fmt.Printf("  New:      %q\n", recPeer.New)
 			fmt.Printf("  Lost:     %q\n", recPeer.Lost)
 
-			peer_lost := strings.Join(recPeer.Lost, "") //må endre fra []string til string
-
 			//hvis jeg får en ny bestilling OG den ikke er vår egen heis skal noe printes
 			if recPeer.New != "" && recPeer.New != strconv.Itoa(system.ElevatorID) {
 				fmt.Println("New peer ID: " + recPeer.New)
 				newSentID, _ := strconv.Atoi(recPeer.New)
 				elevatorIDConnected <- newSentID
 			}
-			if peer_lost != "" {
-				fmt.Println("Peer lost: " + peer_lost)
-				lostSentID, _ := strconv.Atoi(peer_lost)
+			for IDLost := 0; IDLost < len(recPeer.Lost); IDLost ++{
+				lostSentID,_ := strconv.Atoi(recPeer.Lost[IDLost])
+				fmt.Println("Lost sent ID:", lostSentID)
 				elevatorIDDisconnected <- lostSentID
 			}
 
