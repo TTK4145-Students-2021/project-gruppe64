@@ -1,7 +1,6 @@
 package fsm
 
 import (
-	"fmt"
 	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/system"
 )
@@ -133,55 +132,4 @@ func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 		}
 	}
 	return e
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////Maybe not necessary/////////////////////////////////////
-
-func elevatorBehaviourToString(eB system.ElevatorBehaviour) string {
-	switch eB {
-	case system.EB_Idle:
-		return "ED_Idle"
-	case system.EB_DoorOpen:
-		return "EB_DoorOpen"
-	case system.EB_Moving:
-		return "EB_Moving"
-	}
-	return "EB_Undefined"
-}
-
-func motorDirectionToString(mD system.MotorDirection) string { // Importere? Stor forbokstav!
-	switch mD {
-	case system.MD_Stop:
-		return "MD_Stop"
-	case system.MD_Up:
-		return "MD_Up"
-	case system.MD_Down:
-		return "MD_Down"
-	}
-	return "MD_Undefined"
-}
-
-func printElevator(e system.Elevator) {
-	fmt.Printf("  +--------------------+\n")                                             // Sjekk om dette er riktig print-funksjon!
-	fmt.Printf("  |floor = %-2d          |\n", e.Floor)                               // - i %2-d betyr bare - at teksten er left-justified (kosmetisk)
-	fmt.Printf("|direction  = %-12.12s|\n", motorDirectionToString(e.MotorDirection)) // Måtte dele opp for at det skulle bli riktig
-	fmt.Printf("|behaviour = %s|\n", elevatorBehaviourToString(e.Behaviour))                         // Hvorfor feilmelding her?
-	fmt.Printf("  +--------------------+\n")
-	fmt.Printf("  |  | up  | dn  | cab |\n")
-	for f := system.NumFloors - 1; f >= 0; f-- {
-		fmt.Printf("\n  | %d", f)
-		for b := 0; b < system.NumButtons; b++ {
-			if (f == system.NumFloors-1 && b == int(system.BT_HallUp)) || (f == 0 && b == system.BT_HallDown) {
-				fmt.Printf("|     ")
-			} else {
-				if e.Orders[f][b] != 0 {
-					fmt.Printf("|  #  ")
-				} else {
-					fmt.Printf("|  -  ")
-				}
-			}
-		}
-	}
 }

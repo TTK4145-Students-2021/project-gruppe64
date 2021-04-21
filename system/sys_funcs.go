@@ -11,9 +11,7 @@ import (
 	"time"
 )
 
-
 var _mtx sync.Mutex
-
 
 func SpawnBackup() {
 	_mtx = sync.Mutex{}
@@ -64,8 +62,6 @@ func MakeBackupFile() {
 	defer file.Close()
 }
 
-
-
 func LogElevator(elevInfo Elevator) {
 	_mtx.Lock()
 	defer _mtx.Unlock()
@@ -74,7 +70,6 @@ func LogElevator(elevInfo Elevator) {
 	if err !=nil {
 		fmt.Println(err)
 	}
-
 }
 
 func GetLoggedOrders() [NumFloors][NumButtons]int{
@@ -87,9 +82,6 @@ func GetLoggedOrders() [NumFloors][NumButtons]int{
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	var backupElevator Elevator
-	json.Unmarshal(byteValue, &backupElevator)
-
+	_ = json.Unmarshal(byteValue, &backupElevator)
 	return backupElevator.Orders
 }
-
-
