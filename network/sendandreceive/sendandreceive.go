@@ -20,51 +20,80 @@ import (
 )
 */
 
-
-func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.Elevator, broadcastElevatorInfo chan system.Elevator,
-	networkReceive chan system.NetOrder, sendingOrderThroughNet <-chan system.NetOrder, placedMessageReceived chan<- system.NetOrder,
-	orderToSelf chan<- system.ButtonEvent, receivePeers chan peers.PeerUpdate){
+func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh chan<- system.Elevator,
+	orderThroughNetCh <-chan system.NetOrder, placedMessageReceievedCh chan<- system.NetOrder,
+	orderToSelfCh chan<- system.ButtonEvent, elevatorConnectedCh chan<- int, elevatorDisconnectedCh chan<- int) {
 
 	transmitPeerBoolCh := make(chan bool)
+	receivePeerCh := make(chan peers.PeerUpdate)
+
+	receiveElevatorCh := make(chan system.Elevator)
+	transmitElevatorCh := make(chan system.Elevator)
+
+	receiveOrderCh := make(chan system.NetOrder)  //Used for both placed message and orders
+
 
 	go peers.Transmitter(59999, strconv.Itoa(system.ElevatorID), transmitPeerBoolCh)
-	go peers.Receiver(59999, receivePeers)
+	go peers.Receiver(59999, receivePeerCh)
 
-	go bcast.Receiver(60000, receiveElevatorInfo) //Receive others elevator information
-	go bcast.Transmitter(60000, broadcastElevatorInfo) //Send elevator Information
+	go bcast.Receiver(60000, receiveElevatorCh)
+	go bcast.Transmitter(60000, transmitElevatorCh)
 
-	 //PLACED MESSAGE AND ORDER ON SAME. TO FROM/
-	go bcast.Receiver(60001+system.ElevatorID, networkReceive) //Receive orders
+	go bcast.Receiver(60001+system.ElevatorID, receiveOrderCh)
+
+	go elevatorsShareNet(shareOwnElevatorCh, transmitElevatorCh, receiveElevatorCh, otherElevatorCh)
+	go peersNet(receivePeerCh, elevatorConnectedCh, elevatorDisconnectedCh)
 
 	for elevID := 0; elevID < system.NumElevators; elevID++ {
 		if elevID != system.ElevatorID {
-			networkSendCh := make(chan system.NetOrder) //Reset every run
-			go bcast.Transmitter(60001 +elevID, networkSendCh) //Transmit orders to place
-			go placeOrderNetworking(elevID, sendingOrderThroughNet, placedMessageReceived,
-				networkSendCh, networkReceive, orderToSelf)
+			transmitOrderCh := make(chan system.NetOrder) //Reset every run
+			go bcast.Transmitter(60001 +elevID, transmitOrderCh) //Transmit orders to place
+			go ordersNet(elevID, orderThroughNetCh, placedMessageReceievedCh, transmitOrderCh, receiveOrderCh, orderToSelfCh)
 		}
 	}
-
 }
-func InformationSharingThroughNet(ownElevator <- chan system.Elevator, broadcastElevatorInfo chan <- system.Elevator, receiveElevatorInfo <- chan system.Elevator,
-	elevatorInfoCh chan<- system.Elevator) {
+
+func elevatorsShareNet(shareOwnElevatorCh <- chan system.Elevator, transmitElevatorCh chan <- system.Elevator, receiveElevatorCh <- chan system.Elevator,
+	otherElevatorCh chan<- system.Elevator) {
 	for {
 		select {
-		case ownElev := <-ownElevator:
-			//fmt.Printf("Elevatorinfo broadcasted: %#v\n", system.ElevatorInformation{ID: system.ElevatorID, Floor: ownElev.Floor, MotorDirection: ownElev.MotorDirection, Orders: ownElev.Orders, Behaviour: ownElev.Behaviour})
-			broadcastElevatorInfo <- system.Elevator{ID: system.ElevatorID, Floor: ownElev.Floor, MotorDirection: ownElev.MotorDirection, Orders: ownElev.Orders, Behaviour: ownElev.Behaviour}
+		case shareOwnElevator := <-shareOwnElevatorCh:
+			//fmt.Printf("Elevatorinfo broadcasted: %#v\n", system.ElevatorInformation{ID: system.ElevatorID, Floor: ownElevator.Floor, MotorDirection: ownElevator.MotorDirection, Orders: ownElevator.Orders, Behaviour: ownElevator.Behaviour})
+			transmitElevatorCh <- shareOwnElevator
 
-		case rcvElevInfo := <-receiveElevatorInfo:
-			if rcvElevInfo.ID != system.ElevatorID {
-				//fmt.Printf("Elevatorinfo from other elevator: %#v\n", rcvElevInfo)
-				elevatorInfoCh <- rcvElevInfo
+		case receiveElevator := <-receiveElevatorCh:
+			if receiveElevator.ID != system.ElevatorID {
+				//fmt.Printf("Elevatorinfo from other elevator: %#v\n", receiveElevator)
+				otherElevatorCh <- receiveElevator
 			}
-
 		}
 	}
 }
 
-func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan system.NetOrder, placedMessageRecieved chan<- system.NetOrder, networkSend chan<- system.NetOrder, networkReceive <-chan system.NetOrder, orderToSelf chan<- system.ButtonEvent) {
+func peersNet(receivePeerCh <-chan peers.PeerUpdate, elevatorConnectedCh chan<- int, elevatorDisconnectedCh chan<- int){
+	for {
+		select {
+		case receivePeer := <-receivePeerCh:
+			fmt.Printf("Peer update:\n")
+			fmt.Printf("  Peers:    %q\n", receivePeer.Peers)
+			fmt.Printf("  New:      %q\n", receivePeer.New)
+			fmt.Printf("  Lost:     %q\n", receivePeer.Lost)
+
+			if receivePeer.New != "" && receivePeer.New != strconv.Itoa(system.ElevatorID) {
+				fmt.Println("New peer ID: " + receivePeer.New)
+				newSentID, _ := strconv.Atoi(receivePeer.New)
+				elevatorConnectedCh <- newSentID
+			}
+			for IDLost := 0; IDLost < len(receivePeer.Lost); IDLost ++{
+				lostSentID,_ := strconv.Atoi(receivePeer.Lost[IDLost])
+				fmt.Println("Lost sent ID:", lostSentID)
+				elevatorDisconnectedCh <- lostSentID
+			}
+		}
+	}
+}
+
+func ordersNet(threadElevatorID int, sendingOrderThroughNet <-chan system.NetOrder, placedMessageRecieved chan<- system.NetOrder, networkSend chan<- system.NetOrder, networkReceive <-chan system.NetOrder, orderToSelf chan<- system.ButtonEvent) {
 	for {
 		select {
 		case sOrdNet := <-sendingOrderThroughNet:
@@ -88,31 +117,6 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 					networkSend <- netReceive //As placed message }
 				}
 			}
-		}
-	}
-}
-
-func GetPeers(receivePeers <-chan peers.PeerUpdate, elevatorIDConnected chan <- int, elevatorIDDisconnected chan <- int) { //bør ID-ene være int eller string?
-	for {
-		select {
-		case recPeer := <-receivePeers:
-			fmt.Printf("Peer update:\n")
-			fmt.Printf("  Peers:    %q\n", recPeer.Peers)
-			fmt.Printf("  New:      %q\n", recPeer.New)
-			fmt.Printf("  Lost:     %q\n", recPeer.Lost)
-
-			//hvis jeg får en ny bestilling OG den ikke er vår egen heis skal noe printes
-			if recPeer.New != "" && recPeer.New != strconv.Itoa(system.ElevatorID) {
-				fmt.Println("New peer ID: " + recPeer.New)
-				newSentID, _ := strconv.Atoi(recPeer.New)
-				elevatorIDConnected <- newSentID
-			}
-			for IDLost := 0; IDLost < len(recPeer.Lost); IDLost ++{
-				lostSentID,_ := strconv.Atoi(recPeer.Lost[IDLost])
-				fmt.Println("Lost sent ID:", lostSentID)
-				elevatorIDDisconnected <- lostSentID
-			}
-
 		}
 	}
 }

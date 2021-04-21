@@ -1,17 +1,13 @@
 package main
 
 import (
-	"io/ioutil"
 	"realtimeProject/project-gruppe64/distributor"
 	"realtimeProject/project-gruppe64/fsm"
 	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/network/peers"
 	"realtimeProject/project-gruppe64/network/sendandreceive"
 	"realtimeProject/project-gruppe64/system"
 	"realtimeProject/project-gruppe64/timer"
 	"runtime"
-	"strconv"
-	"time"
 )
 
 /*
@@ -37,34 +33,40 @@ func primaryWork(activateAsPrimary <-chan bool){
 			if activate{
 				hardwareIO.Init(system.LocalHost, system.NumFloors)
 				system.SpawnBackup()
+				go system.PrimaryDocumentation()
 
-				orderToSelfCh := make(chan system.ButtonEvent)
-				hallOrderCh := make(chan system.ButtonEvent)
+				// ->FSM
 				floorArrivalCh := make(chan int)
 				obstructionEventCh := make(chan bool)
-				doorTimerDurationCh := make(chan float64)
+				orderToSelfCh := make(chan system.ButtonEvent)
 				doorTimerTimedOutCh := make(chan bool)
 
+
+				// ->Distributor
+				hallOrderCh := make(chan system.ButtonEvent)
 				ownElevatorCh := make(chan system.Elevator)
+				messageTimerTimedOutCh := make(chan system.NetOrder)
+				orderTimerTimedOutCh := make(chan system.NetOrder)
+				otherElevatorCh := make(chan system.Elevator)
 
-				//Network channels for transmitting and receiving
-				receiveElevatorInfoCh := make(chan system.Elevator)
-				broadcastElevatorInfoCh := make(chan system.Elevator)
-				networkReceiveCh := make(chan system.NetOrder)
-				elevatorIDConnectedCh := make(chan int, system.NumElevators - 1) //DENNE HG, sender id til heis når connected
-				elevatorIDDisconnectedCh := make(chan int, system.NumElevators - 1) //DENNE HG, sender id til heis når disconnected
-				receivePeersCh := make(chan peers.PeerUpdate)
+				// ->Network
 
 
-				sendingOrderThroughNetCh := make(chan system.NetOrder) //channel that receives
-				elevatorInfoCh := make(chan system.Elevator) //channel with elevatorinformation, sent from networkmodule to
-				//own modules
-
+				//->Timer
+				doorTimerDurationCh := make(chan float64)
 				messageTimerCh := make(chan system.NetOrder)
 				placedMessageReceivedCh := make(chan system.NetOrder)
-				messageTimerTimedOutCh := make(chan system.NetOrder)
 				orderTimerCh := make(chan system.NetOrder)
-				orderTimerTimedOutCh := make(chan system.NetOrder)
+
+
+				//Network channels for transmitting and receiving
+				shareOwnElevatorCh := make(chan system.Elevator)
+				elevatorConnectedCh := make(chan int, system.NumElevators - 1)
+				elevatorDisconnectedCh := make(chan int, system.NumElevators - 1)
+				orderThroughNetCh := make(chan system.NetOrder)
+
+
+
 
 				// Timers:
 				go timer.RunDoorTimer(doorTimerDurationCh, doorTimerTimedOutCh)
@@ -74,21 +76,16 @@ func primaryWork(activateAsPrimary <-chan bool){
 				// Hardware:
 				go hardwareIO.RunHardware(orderToSelfCh, hallOrderCh, floorArrivalCh, obstructionEventCh)
 
-				// Distributor and FSM:
+				// Distributor:
 				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh, doorTimerDurationCh, doorTimerTimedOutCh)
-				go distributor.OrderDistributor(hallOrderCh, elevatorInfoCh, ownElevatorCh, sendingOrderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh, elevatorIDConnectedCh, elevatorIDDisconnectedCh)
 
-				//Network:
-				go sendandreceive.SetUpReceiverAndTransmitterPorts(receiveElevatorInfoCh, broadcastElevatorInfoCh, networkReceiveCh, sendingOrderThroughNetCh, placedMessageReceivedCh, orderToSelfCh, receivePeersCh)
-				go sendandreceive.InformationSharingThroughNet(ownElevatorCh, broadcastElevatorInfoCh, receiveElevatorInfoCh, elevatorInfoCh)
-				go sendandreceive.GetPeers(receivePeersCh, elevatorIDConnectedCh, elevatorIDDisconnectedCh)
+				// FSM:
+				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh, orderThroughNetCh,
+					orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh, elevatorConnectedCh, elevatorDisconnectedCh)
 
-				docNum := 0
-				for {
-					_ = ioutil.WriteFile("system/primary_doc"+strconv.Itoa(system.ElevatorID)+".txt", []byte(strconv.FormatInt(int64(docNum), 10)), 0644)
-					time.Sleep(1*time.Second)
-					docNum += 1
-				}
+				// Network:
+				go sendandreceive.RunNetworking(shareOwnElevatorCh, otherElevatorCh, orderThroughNetCh,
+					placedMessageReceivedCh, orderToSelfCh, elevatorConnectedCh, elevatorDisconnectedCh)
 			}
 		}
 	}

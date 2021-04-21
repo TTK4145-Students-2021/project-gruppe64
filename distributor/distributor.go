@@ -15,7 +15,7 @@ import (
 
 //ENDRE DISTRIBUTOR TIL Å HA GLOBAL VARIABEL ELEVATORS SOM ER ELEVATOR INFORMATION IKKE ELEVATOR TAGGED
 func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan system.Elevator,
-	ownElevator <-chan system.Elevator, orderThroughNet chan<- system.NetOrder,
+	ownElevator <-chan system.Elevator, shareOwnElevatorCh chan<- system.Elevator, orderThroughNet chan<- system.NetOrder,
 	orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.NetOrder,
 	messageTimerTimedOut <-chan system.NetOrder, orderTimer chan<- system.NetOrder,
 	orderTimerTimedOut <- chan system.NetOrder, elevatorIDConnected <-chan int, elevatorIDDisconnected <-chan int){
@@ -74,6 +74,7 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan 
 			}
 
 		case e := <-ownElevator:
+			shareOwnElevatorCh <- e
 			system.LogElevator(e)
 			elevators[system.ElevatorID] = e
 			setAllHallLights(elevators)

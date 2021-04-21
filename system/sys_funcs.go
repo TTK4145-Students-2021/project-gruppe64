@@ -47,6 +47,15 @@ func CheckPrimaryExistence(activateAsPrimary chan<- bool) {
 	}
 }
 
+func PrimaryDocumentation() {
+	docNum := 0
+	for {
+		_ = ioutil.WriteFile("system/primary_doc"+strconv.Itoa(ElevatorID)+".txt", []byte(strconv.FormatInt(int64(docNum), 10)), 0644)
+		time.Sleep(1*time.Second)
+		docNum += 1
+	}
+}
+
 func MakeBackupFile() {
 	file, err := os.Create("system/primary_doc"+strconv.Itoa(ElevatorID)+".txt")
 	if err != nil {
