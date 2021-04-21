@@ -1,8 +1,6 @@
 package system
 
-//////////////////////////HARDWAREIO/////////////////////////////////
 type MotorDirection int
-
 const (
 	MD_Up   MotorDirection = 1
 	MD_Down                = -1
@@ -10,7 +8,6 @@ const (
 )
 
 type ButtonType int
-
 const (
 	BT_HallUp   ButtonType = 0
 	BT_HallDown            = 1
@@ -21,10 +18,7 @@ type ButtonEvent struct {
 	Floor  int
 	Button ButtonType
 }
-/////////////////////////////////////////////////////////////////////
 
-
-///////////////////////////////FSM///////////////////////////////////
 type ElevatorBehaviour int
 const (
 	EB_Idle     ElevatorBehaviour = 0 // Evt skrive om til camelCase!
@@ -37,44 +31,6 @@ const (
 	CO_All    ClearOrdersVariant = 0
 	CO_InMotorDirection                     = 1
 )
-/*
-
-type Elevator struct {
-	Floor          int
-	MotorDirection MotorDirection
-	Orders         [NumFloors][NumButtons] int
-	Behaviour      ElevatorBehaviour
-	Config         struct{
-		ClearOrdersVariant ClearOrdersVariant
-		DoorOpenDurationSec float64
-	}
-}
-*/
-/////////////////////////////////////////////////////////////////////
-
-
-///////////////////////////DISTRIBUTOR///////////////////////////////
-type ElevatorTagged struct  {
-	Behaviour string                 `json:"behaviour"`
-	Floor int                        `json:"floor"`
-	MotorDirection string            `json:"direction"`
-	CabOrders [NumFloors]bool `json:"cabRequests"`
-}
-
-// https://mholt.github.io/json-to-go/
-type ElevatorsTagged struct{
-	HallOrders [NumFloors][2]bool `json:"hallRequests"`
-	States map[string]ElevatorTagged     `json:"states"`
-}
-/////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////NETWORK//////////////////////////////////
-type NetOrder struct{
-	ReceivingElevatorID int
-	SendingElevatorID   int
-	Order               ButtonEvent
-}
 
 type Elevator struct {
 	ID             int
@@ -87,5 +43,21 @@ type Elevator struct {
 		DoorOpenDurationSec float64
 	}
 }
-/////////////////////////////////////////////////////////////////////
 
+type NetOrder struct{
+	ReceivingElevatorID int
+	SendingElevatorID   int
+	Order               ButtonEvent
+}
+
+type ElevatorTagged struct  {
+	Behaviour string                 `json:"behaviour"`
+	Floor int                        `json:"floor"`
+	MotorDirection string            `json:"direction"`
+	CabOrders [NumFloors]bool `json:"cabRequests"`
+}
+
+type ElevatorsTagged struct{
+	HallOrders [NumFloors][2]bool `json:"hallRequests"`
+	States map[string]ElevatorTagged     `json:"states"`
+}
