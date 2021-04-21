@@ -41,6 +41,11 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 
 		case otherElevator:= <-otherElevatorCh:
 			elevators[otherElevator.ID] = otherElevator
+			if otherElevator.MotorError {
+				elevatorsOnline[otherElevator.ID] = false
+			} else {
+				elevatorsOnline[otherElevator.ID] = true
+			}
 			setAllHallLights(elevators)
 			if removeExecutedOrders(otherElevator, distributedOrders[otherElevator.ID]) != nil {
 				distributedOrders[otherElevator.ID] = removeExecutedOrders(otherElevator,

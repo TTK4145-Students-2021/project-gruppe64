@@ -14,7 +14,6 @@ import (
 )
  */
 
-
 func RunDoorTimer (doorTimerDurationCh <-chan float64, doorTimerTimedOutCh chan<- bool) {
 	timerRunning := false
 	stopTimerFromTimeOut := false
@@ -68,7 +67,6 @@ func RunMessageTimer(messageTimerCh <-chan system.NetOrder, placedMessageReceive
 	}
 }
 
-
 func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh chan<- system.NetOrder){
 	for{
 		select {
@@ -80,5 +78,3 @@ func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh cha
 		}
 	}
 }
-
-

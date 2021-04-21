@@ -36,6 +36,7 @@ type Elevator struct {
 	ID             int
 	Floor          int
 	MotorDirection MotorDirection
+	MotorError	   bool
 	Orders         [NumFloors][NumButtons]int
 	Behaviour      ElevatorBehaviour
 	Config         struct{

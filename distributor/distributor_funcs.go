@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
-	"realtimeProject/project-gruppe64/system"
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"realtimeProject/project-gruppe64/system"
 	"strconv"
 )
 
