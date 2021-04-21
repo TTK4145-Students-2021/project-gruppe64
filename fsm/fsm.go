@@ -2,8 +2,8 @@ package fsm
 
 import (
 	"fmt"
-	"realtimeProject/project-gruppe64/system"
 	"realtimeProject/project-gruppe64/hardwareIO"
+	"realtimeProject/project-gruppe64/system"
 )
 
 /*
@@ -15,14 +15,16 @@ import (
  */
 
 
-func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int, obstructionEvent <-chan bool, ownElevator chan<- system.Elevator, doorTimerDuration chan<- float64, doorTimerTimedOut <-chan bool){
+func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan int, obstructionEventCh <-chan bool,
+	ownElevatorCh chan<- system.Elevator, doorTimerDurationCh chan<- float64, doorTimerTimedOutCh <-chan bool){
+
 	var elevator system.Elevator
 	obstruction := false
 	elevator.ID = system.ElevatorID
 	elevator.Orders = system.GetLoggedOrders()
 	select {
-	case flrA :=<- floorArrival: // If the floor sensor registers a floor at initialization
-		elevator.Floor = flrA
+	case floorArrival :=<- floorArrivalCh: // If the floor sensor registers a floor at initialization
+		elevator.Floor = floorArrival
 		elevator.MotorDirection = system.MD_Stop
 		elevator.Behaviour = system.EB_Idle
 		elevator.Config.ClearOrdersVariant = system.ElevatorClearOrdersVariant
@@ -40,32 +42,32 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 
 	for{
 		select {
-		case btnE := <-orderToSelf:
-			hardwareIO.SetButtonLamp(btnE.Button, btnE.Floor, true)
+		case orderToSelf := <-orderToSelfCh:
+			hardwareIO.SetButtonLamp(orderToSelf.Button, orderToSelf.Floor, true)
 			if obstruction{
-				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
+				elevator.Orders[orderToSelf.Floor][int(orderToSelf.Button)] = 1
 				break
 			}
 			switch elevator.Behaviour {
 			case system.EB_DoorOpen:
-				if elevator.Floor == btnE.Floor {
-					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
+				if elevator.Floor == orderToSelf.Floor {
+					doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 				} else {
-					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
+					elevator.Orders[orderToSelf.Floor][int(orderToSelf.Button)] = 1
 				}
 				break
 
 			case system.EB_Moving:
-				elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
+				elevator.Orders[orderToSelf.Floor][int(orderToSelf.Button)] = 1
 				break
 			case system.EB_Idle:
-				if elevator.Floor == btnE.Floor {
+				if elevator.Floor == orderToSelf.Floor {
 					hardwareIO.SetDoorOpenLamp(true)
-					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
+					doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 					elevator.Behaviour = system.EB_DoorOpen
 					hardwareIO.SetMotorDirection(system.MD_Stop)
 				} else {
-					elevator.Orders[btnE.Floor][int(btnE.Button)] = 1
+					elevator.Orders[orderToSelf.Floor][int(orderToSelf.Button)] = 1
 					elevator.MotorDirection = chooseDirection(elevator)
 					hardwareIO.SetMotorDirection(elevator.MotorDirection)
 					elevator.Behaviour = system.EB_Moving
@@ -75,9 +77,9 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 				fmt.Printf("\n Button was bushed but nothing happend. Undefined state.\n")
 				break
 			}
-			ownElevator <- elevator
-		case flrA := <-floorArrival:
-			elevator.Floor = flrA
+			ownElevatorCh <- elevator
+		case floorArrival := <-floorArrivalCh:
+			elevator.Floor = floorArrival
 			hardwareIO.SetFloorIndicator(elevator.Floor)
 			switch elevator.Behaviour {
 			case system.EB_Moving:
@@ -85,7 +87,7 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 					hardwareIO.SetMotorDirection(system.MD_Stop)
 					hardwareIO.SetDoorOpenLamp(true)
 					elevator = clearOrdersAtCurrentFloor(elevator)
-					doorTimerDuration <- elevator.Config.DoorOpenDurationSec
+					doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 					setAllButtonLights(elevator)
 					elevator.Behaviour = system.EB_DoorOpen
 				} else if elevator.Floor == 0{
@@ -105,12 +107,12 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 				break
 			}
 			setAllButtonLights(elevator)
-			ownElevator <- elevator
-		case dTTimedOut := <-doorTimerTimedOut:
+			ownElevatorCh <- elevator
+		case doorTimerTimedOut := <-doorTimerTimedOutCh:
 			if obstruction{
 				break
 			}
-			if dTTimedOut {
+			if doorTimerTimedOut {
 				switch elevator.Behaviour {
 				case system.EB_DoorOpen:
 					clearOrdersAtCurrentFloor(elevator)
@@ -127,16 +129,16 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 					break
 				}
 			}
-			ownElevator <- elevator
-		case obstrE := <-obstructionEvent:
-			obstruction = obstrE
-			if elevator.Behaviour == system.MD_Stop && obstrE{
+			ownElevatorCh <- elevator
+		case obstructionEvent := <-obstructionEventCh:
+			obstruction = obstructionEvent
+			if elevator.Behaviour == system.MD_Stop && obstructionEvent{
 				hardwareIO.SetDoorOpenLamp(true)
 				elevator.Behaviour = system.EB_DoorOpen
 			}
 
 			if !obstruction {
-				doorTimerDuration <- elevator.Config.DoorOpenDurationSec
+				doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 				break
 			}
 		}

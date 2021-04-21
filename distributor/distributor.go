@@ -1,7 +1,6 @@
 package distributor
 
 import (
-	"fmt"
 	"realtimeProject/project-gruppe64/system"
 )
 
@@ -11,14 +10,12 @@ import (
 )
 */
 
-// GOROUTINE:
-
-//ENDRE DISTRIBUTOR TIL Å HA GLOBAL VARIABEL ELEVATORS SOM ER ELEVATOR INFORMATION IKKE ELEVATOR TAGGED
-func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan system.Elevator,
-	ownElevator <-chan system.Elevator, shareOwnElevatorCh chan<- system.Elevator, orderThroughNet chan<- system.NetOrder,
-	orderToSelf chan<- system.ButtonEvent, messageTimer chan<- system.NetOrder,
-	messageTimerTimedOut <-chan system.NetOrder, orderTimer chan<- system.NetOrder,
-	orderTimerTimedOut <- chan system.NetOrder, elevatorIDConnected <-chan int, elevatorIDDisconnected <-chan int){
+func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-chan system.Elevator,
+	ownElevatorCh <-chan system.Elevator, shareOwnElevatorCh chan<- system.Elevator,
+	orderThroughNetCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent,
+	messageTimerCh chan<- system.NetOrder, messageTimerTimedOutCh <-chan system.NetOrder,
+	orderTimerCh chan<- system.NetOrder, orderTimerTimedOutCh <- chan system.NetOrder,
+	elevatorConnectedCh <-chan int, elevatorDisconnectedCh <-chan int){
 
 	elevators := initiateElevators()
 	elevatorsOnline := make(map[int]bool)
@@ -26,15 +23,15 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan 
 
 	for {
 		select {
-		case hallOrd := <-hallOrder:
-			designatedID := getDesignatedElevatorID(hallOrd, elevators, elevatorsOnline)
+		case hallOrder := <-hallOrderCh:
+			designatedID := getDesignatedElevatorID(hallOrder, elevators, elevatorsOnline)
 			if designatedID == system.ElevatorID {
-				orderToSelf <- hallOrd
+				orderToSelfCh <- hallOrder
 			} else {
-				sOrd := system.NetOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID, Order: hallOrd}
-				orderThroughNet <- sOrd
-				messageTimer <- sOrd
-				orderTimer <- sOrd
+				sOrd := system.NetOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID, Order: hallOrder}
+				orderThroughNetCh <- sOrd
+				messageTimerCh <- sOrd
+				orderTimerCh <- sOrd
 				if distributedOrders[designatedID] != nil {
 					distributedOrders[designatedID] = append(distributedOrders[designatedID], sOrd)
 				} else {
@@ -42,18 +39,33 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan 
 				}
 			}
 
-		case msgTimedOut := <-messageTimerTimedOut:
-			fmt.Println("reassigning")
-			if distributedOrders[msgTimedOut.ReceivingElevatorID] != nil {
-				distributedOrders[msgTimedOut.ReceivingElevatorID] = removeOrderFromOrders(msgTimedOut, distributedOrders[msgTimedOut.ReceivingElevatorID])
+		case otherElevator:= <-otherElevatorCh:
+			elevators[otherElevator.ID] = otherElevator
+			setAllHallLights(elevators)
+			if removeExecutedOrders(otherElevator, distributedOrders[otherElevator.ID]) != nil {
+				distributedOrders[otherElevator.ID] = removeExecutedOrders(otherElevator,
+					distributedOrders[otherElevator.ID])
 			}
-			designatedID := getDesignatedElevatorID(msgTimedOut.Order, elevators, elevatorsOnline)
+
+		case ownElevator := <-ownElevatorCh:
+			shareOwnElevatorCh <- ownElevator
+			system.LogElevator(ownElevator)
+			elevators[system.ElevatorID] = ownElevator
+			setAllHallLights(elevators)
+
+		case messageTimerTimedOut := <-messageTimerTimedOutCh:
+			if distributedOrders[messageTimerTimedOut.ReceivingElevatorID] != nil {
+				distributedOrders[messageTimerTimedOut.ReceivingElevatorID] = removeOrderFromOrders(
+					messageTimerTimedOut, distributedOrders[messageTimerTimedOut.ReceivingElevatorID])
+			}
+			designatedID := getDesignatedElevatorID(messageTimerTimedOut.Order, elevators, elevatorsOnline)
 			if designatedID == system.ElevatorID {
-				orderToSelf <- msgTimedOut.Order
+				orderToSelfCh <- messageTimerTimedOut.Order
 			} else {
-				sOrd := system.NetOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID, Order: msgTimedOut.Order}
-				orderThroughNet <- sOrd
-				messageTimer <- sOrd
+				sOrd := system.NetOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID,
+					Order: messageTimerTimedOut.Order}
+				orderThroughNetCh <- sOrd
+				messageTimerCh <- sOrd
 				if distributedOrders[designatedID] != nil {
 					distributedOrders[designatedID] = append(distributedOrders[designatedID], sOrd)
 				} else {
@@ -61,51 +73,25 @@ func OrderDistributor(hallOrder <-chan system.ButtonEvent, otherElevator <-chan 
 				}
 			}
 
-		case ordTimedOut := <-orderTimerTimedOut:
+		case orderTimerTimedOut := <-orderTimerTimedOutCh:
 			for key, dOrds := range distributedOrders {
-				if key == ordTimedOut.ReceivingElevatorID {
+				if key == orderTimerTimedOut.ReceivingElevatorID {
 					for _, dOrd := range dOrds {
-						if dOrd == ordTimedOut {
-							distributedOrders[key] = removeOrderFromOrders(ordTimedOut, distributedOrders[key])
-							orderToSelf <- ordTimedOut.Order
+						if dOrd == orderTimerTimedOut {
+							distributedOrders[key] = removeOrderFromOrders(orderTimerTimedOut, distributedOrders[key])
+							orderToSelfCh <- orderTimerTimedOut.Order
 						}
 					}
 				}
 			}
 
-		case e := <-ownElevator:
-			shareOwnElevatorCh <- e
-			system.LogElevator(e)
-			elevators[system.ElevatorID] = e
-			setAllHallLights(elevators)
+		case elevatorConnected := <-elevatorConnectedCh:
+			elevatorsOnline[elevatorConnected] = true
 
-		case e := <-otherElevator:
-			if e.ID != system.ElevatorID {
-				elevators[e.ID] = e
-				setAllHallLights(elevators)
-				if removeExecutedOrders(e, distributedOrders[e.ID]) != nil {
-					distributedOrders[e.ID] = removeExecutedOrders(e, distributedOrders[e.ID])
-				}
-			}
-		case eID := <-elevatorIDConnected:
-			elevatorsOnline[eID] = true
-
-		case eID := <-elevatorIDDisconnected:
-			elevatorsOnline[eID] = false
+		case elevatorDisconnected := <-elevatorDisconnectedCh:
+			elevatorsOnline[elevatorDisconnected] = false
 
 		}
 	}
 }
 
-/*
-func checkForMotorStop(ordersForMotorCheck <-chan [system.NumFloors][system.NumButtons]int, motorStop chan<- bool) {
-	var ordersCheck [system.NumFloors][system.NumButtons]int
-	for {
-		select{
-		case ordForMChck := <-ordersForMotorCheck:
-			ordersCheck = ordForMChck
-			time.AfterFunc(5*time.Second)
-		}
-	}
-}
-*/

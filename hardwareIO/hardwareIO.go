@@ -13,7 +13,8 @@ import (
  */
 
 
-func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.ButtonEvent, floorArrival chan<- int, obstructionEvent chan<- bool)  {
+func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- system.ButtonEvent,
+	floorArrivalCh chan<- int, obstructionEventCh chan<- bool)  {
 
 	drvButtons := make(chan system.ButtonEvent)
 	drvFloors  := make(chan int)
@@ -30,16 +31,16 @@ func RunHardware(orderToSelf chan<- system.ButtonEvent, hallOrder chan<- system.
 		case a := <- drvButtons:
 			fmt.Printf("%+v\n", a)
 			if a.Button == system.BT_Cab { //Sjekker om til fsm eller til distributor
-				orderToSelf <- a
+				orderToSelfCh <- a
 			} else {
-				hallOrder <- a
+				hallOrderCh <- a
 			}
 		case a := <- drvFloors:
 			fmt.Printf("%+v\n", a)
-			floorArrival <- a
+			floorArrivalCh <- a
 		case a := <- drvObstr:
 			fmt.Printf("%+v\n", a)
-			obstructionEvent <- a
+			obstructionEventCh <- a
 		case a := <- drvStop:
 			// Can choose if implemented
 			for a {

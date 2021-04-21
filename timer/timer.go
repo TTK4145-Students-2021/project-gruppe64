@@ -15,31 +15,30 @@ import (
  */
 
 
-
-func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bool) {
+func RunDoorTimer (doorTimerDurationCh <-chan float64, doorTimerTimedOutCh chan<- bool) {
 	timerRunning := false
 	stopTimerFromTimeOut := false
 	for {
 		select {
-		case dTD := <-doorTimerDuration:
+		case doorTimerDuration := <-doorTimerDurationCh:
 			if timerRunning {
 				stopTimerFromTimeOut = true
-				time.AfterFunc(time.Duration(dTD)*time.Second, func() {
+				time.AfterFunc(time.Duration(doorTimerDuration)*time.Second, func() {
 					if stopTimerFromTimeOut {
 						stopTimerFromTimeOut = false
 					} else {
 						timerRunning = false
-						doorTimerTimedOut <- true
+						doorTimerTimedOutCh <- true
 					}
 				})
 			} else {
 				timerRunning = true
-				time.AfterFunc(time.Duration(dTD)*time.Second, func() {
+				time.AfterFunc(time.Duration(doorTimerDuration)*time.Second, func() {
 					if stopTimerFromTimeOut {
 						stopTimerFromTimeOut = false
 					} else {
 						timerRunning = false
-						doorTimerTimedOut <- true
+						doorTimerTimedOutCh <- true
 					}
 				})
 			}
@@ -47,41 +46,36 @@ func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bo
 	}
 }
 
-
-
-
-//send ordren når message timer startes (når ny melding sendes), og
-//send ordren når acceptance message er mottatt (da slettes timer fra running timers).
-//
-func RunMessageTimer(messageTimer <-chan system.NetOrder, placedMessageReceived <-chan system.NetOrder, messageTimerTimedOut chan<- system.NetOrder){
+func RunMessageTimer(messageTimerCh <-chan system.NetOrder, placedMessageReceivedCh <-chan system.NetOrder,
+	messageTimerTimedOutCh chan<- system.NetOrder){
 	timersRunningMap := make(map[system.NetOrder]bool)
 
 	for{
 		select {
-		case msgTmr := <-messageTimer:
-			timersRunningMap[msgTmr] = true
+		case messageTimer := <-messageTimerCh:
+			timersRunningMap[messageTimer] = true
 			go time.AfterFunc(time.Duration(system.MessageTimerDuration)*time.Second, func(){
-				if timersRunningMap[msgTmr]{
-					messageTimerTimedOut <- msgTmr
-					delete(timersRunningMap, msgTmr)
+				if timersRunningMap[messageTimer]{
+					messageTimerTimedOutCh <- messageTimer
+					delete(timersRunningMap, messageTimer)
 				} else {
-					delete(timersRunningMap, msgTmr)
+					delete(timersRunningMap, messageTimer)
 				}
 			})
-		case plcdMsg := <-placedMessageReceived:
-			timersRunningMap[plcdMsg] = false
+		case placedMessageReceived := <-placedMessageReceivedCh:
+			timersRunningMap[placedMessageReceived] = false
 		}
 	}
 }
 
 
-func RunOrderTimer(orderTimer <-chan system.NetOrder, orderTimerTimedOut chan<- system.NetOrder){
+func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh chan<- system.NetOrder){
 	for{
 		select {
-		case ord := <-orderTimer:
+		case orderTimer := <-orderTimerCh:
 			go time.AfterFunc(time.Duration(system.OrderTimerDuration)*time.Second, func() {
 				fmt.Println("Order timer timed out")
-				orderTimerTimedOut <- ord
+				orderTimerTimedOutCh <- orderTimer
 			})
 		}
 	}

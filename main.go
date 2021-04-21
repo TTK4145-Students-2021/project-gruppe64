@@ -77,11 +77,13 @@ func primaryWork(activateAsPrimary <-chan bool){
 				go hardwareIO.RunHardware(orderToSelfCh, hallOrderCh, floorArrivalCh, obstructionEventCh)
 
 				// Distributor:
-				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh, doorTimerDurationCh, doorTimerTimedOutCh)
+				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh,
+					doorTimerDurationCh, doorTimerTimedOutCh)
 
 				// FSM:
-				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh, orderThroughNetCh,
-					orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh, elevatorConnectedCh, elevatorDisconnectedCh)
+				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh,
+					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh,
+					orderTimerTimedOutCh, elevatorConnectedCh, elevatorDisconnectedCh)
 
 				// Network:
 				go sendandreceive.RunNetworking(shareOwnElevatorCh, otherElevatorCh, orderThroughNetCh,
@@ -95,7 +97,6 @@ func primaryWork(activateAsPrimary <-chan bool){
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	activateAsPrimaryCh := make(chan bool)
-
 	if system.IsBackup(){
 		go system.CheckPrimaryExistence(activateAsPrimaryCh)
 		go primaryWork(activateAsPrimaryCh)
@@ -104,6 +105,5 @@ func main() {
 		go primaryWork(activateAsPrimaryCh)
 		activateAsPrimaryCh <- true
 	}
-
 	for {}
 }
