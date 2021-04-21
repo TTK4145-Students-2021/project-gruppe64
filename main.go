@@ -27,6 +27,8 @@ import (
 */
 
 func primaryWork(activateAsPrimary <-chan bool){
+
+	activateLoop:
 	for{
 		select{
 		case activate := <-activateAsPrimary:
@@ -40,13 +42,13 @@ func primaryWork(activateAsPrimary <-chan bool){
 				obstructionEventCh := make(chan bool)
 				orderToSelfCh := make(chan system.ButtonEvent)
 				doorTimerTimedOutCh := make(chan bool)
+				motorErrorCh:= make(chan bool)
 
 				// ->Distributor
 				hallOrderCh := make(chan system.ButtonEvent)
 				ownElevatorCh := make(chan system.Elevator)
 				otherElevatorCh := make(chan system.Elevator)
 				messageTimerTimedOutCh := make(chan system.NetOrder)
-				orderTimerTimedOutCh := make(chan system.NetOrder)
 				elevatorConnectedCh := make(chan int, system.NumElevators - 1)
 				elevatorDisconnectedCh := make(chan int, system.NumElevators - 1)
 
@@ -59,19 +61,19 @@ func primaryWork(activateAsPrimary <-chan bool){
 				doorTimerDurationCh := make(chan float64)
 				messageTimerCh := make(chan system.NetOrder)
 				placedMessageReceivedCh := make(chan system.NetOrder)
-				orderTimerCh := make(chan system.NetOrder)
+
 
 				// Hardware:
 				go hardwareIO.RunHardware(orderToSelfCh, hallOrderCh, floorArrivalCh, obstructionEventCh)
+				go hardwareIO.CheckForMotorStop(motorErrorCh)
 
 				// FSM:
 				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh,
-					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh,
-					orderTimerTimedOutCh, elevatorConnectedCh, elevatorDisconnectedCh)
+					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, elevatorConnectedCh, elevatorDisconnectedCh)
 
 				// Distributor:
 				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh,
-					doorTimerDurationCh, doorTimerTimedOutCh)
+					doorTimerDurationCh, doorTimerTimedOutCh, motorErrorCh)
 
 				// Network:
 				go sendandreceive.RunNetworking(shareOwnElevatorCh, otherElevatorCh, orderThroughNetCh,
@@ -80,8 +82,8 @@ func primaryWork(activateAsPrimary <-chan bool){
 				// Timers:
 				go timer.RunDoorTimer(doorTimerDurationCh, doorTimerTimedOutCh)
 				go timer.RunMessageTimer(messageTimerCh, placedMessageReceivedCh, messageTimerTimedOutCh)
-				go timer.RunOrderTimer(orderTimerCh, orderTimerTimedOutCh)
 
+				break activateLoop
 			}
 		}
 	}

@@ -54,7 +54,7 @@ func getElevatorTagged(e system.Elevator) system.ElevatorTagged{
 	cabOrds := [system.NumFloors]bool{}
 	indexCount := 0
 	for _, f := range e.Orders{
-		if f[2] == 0{ //Tror dette er cab knappen i matrisen (?) litt usikker
+		if f[2] == 0{
 			cabOrds[indexCount] = false
 		} else {
 			cabOrds[indexCount] = true
@@ -67,18 +67,21 @@ func getElevatorTagged(e system.Elevator) system.ElevatorTagged{
 
 
 func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevator, elevsOnline map[int]bool) int {
-	onlineElevsTagged := make(map[string]system.ElevatorTagged)
+	availableElevsTagged := make(map[string]system.ElevatorTagged)
 	for ID, e := range elevs {
-		if ID == system.ElevatorID{
-			onlineElevsTagged[strconv.Itoa(ID)] = getElevatorTagged(e)
+		if ID == system.ElevatorID && !e.MotorError{
+			availableElevsTagged[strconv.Itoa(ID)] = getElevatorTagged(e)
 		} else {
-			if elevsOnline[ID]{
-				onlineElevsTagged[strconv.Itoa(ID)] = getElevatorTagged(e)
+			if elevsOnline[ID] && !e.MotorError{
+				availableElevsTagged[strconv.Itoa(ID)] = getElevatorTagged(e)
 			}
 		}
 	}
+	if len(availableElevsTagged) == 0 {
+		availableElevsTagged[strconv.Itoa(system.ElevatorID)] = getElevatorTagged(elevs[system.ElevatorID])
+	}
 	elevatorsTagged := system.ElevatorsTagged{}
-	elevatorsTagged.States = onlineElevsTagged
+	elevatorsTagged.States = availableElevsTagged
 	switch ord.Button {
 	case system.BT_HallUp:
 		elevatorsTagged.HallOrders[ord.Floor][0] = true
@@ -104,9 +107,8 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 		log.Fatal(errU)
 	}
 	for key, data := range costMap {
-
 		for _, flr := range data {
-			if flr[0] == true || flr[1] == true { //Hvis kalkulasjonen sier at heisen har fått ordren
+			if flr[0] == true || flr[1] == true {
 				retID, errK := strconv.Atoi(key)
 				if errK != nil {
 					log.Fatal(errK)
@@ -116,36 +118,6 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 		}
 	}
 	return -1
-}
-
-func checkIfOrderExecuted(e system.Elevator, ord system.NetOrder) bool {
-	if e.Orders[ord.Order.Floor][ord.Order.Button] == 1 {
-		return false
-	} else {
-		return true
-	}
-}
-
-func removeExecutedOrders(e system.Elevator, distributedOrds []system.NetOrder) []system.NetOrder{
-	var updatedDistributedOrds []system.NetOrder
-	for _, dOrds := range distributedOrds{
-		if !checkIfOrderExecuted(e, dOrds){
-			updatedDistributedOrds = append(updatedDistributedOrds, dOrds)
-		}
-	}
-	return updatedDistributedOrds
-}
-
-func removeOrderFromOrders(removeOrd system.NetOrder, ords []system.NetOrder) []system.NetOrder {
-	retOrds := ords
-	for index := 0; index < len(retOrds); index++ {
-		if retOrds[index] == removeOrd {
-			retOrds[index] = retOrds[len(retOrds) - 1]
-			retOrds[len(retOrds) - 1] = system.NetOrder{}
-			return retOrds[:len(retOrds) - 1]
-		}
-	}
-	return retOrds
 }
 
 func setAllHallLights(elevs map[int]system.Elevator){
@@ -173,5 +145,3 @@ func setAllHallLights(elevs map[int]system.Elevator){
 		}
 	}
 }
-
-

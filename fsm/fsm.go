@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/system"
-	"time"
 )
 
 /*
@@ -17,12 +16,13 @@ import (
 
 
 func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan int, obstructionEventCh <-chan bool,
-	ownElevatorCh chan<- system.Elevator, doorTimerDurationCh chan<- float64, doorTimerTimedOutCh <-chan bool){
+	ownElevatorCh chan<- system.Elevator, doorTimerDurationCh chan<- float64, doorTimerTimedOutCh <-chan bool,
+	motorErrorCh <-chan bool){
 	var elevator system.Elevator
 	obstruction := false
 
 	elevator.ID = system.ElevatorID
-	elevator.Orders = system.GetLoggedOrders()
+	elevator.Orders = system.GetLoggedElevator().Orders
 	select {
 	case floorArrival :=<- floorArrivalCh: // If the floor sensor registers a floor at initialization
 		elevator.Floor = floorArrival
@@ -41,10 +41,10 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 		break
 	}
 
-	elevatorMotorCheckCh := make(chan system.Elevator)
-	motorErrorCh := make(chan bool)
+	//elevatorMotorCheckCh := make(chan system.Elevator)
+	//motorErrorCh := make(chan bool)
 
-	go checkForMotorError(elevatorMotorCheckCh, motorErrorCh)
+	//go checkForMotorError(elevatorMotorCheckCh, motorErrorCh)
 
 	for{
 		select {
@@ -87,7 +87,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				break
 			}
 			ownElevatorCh <- elevator
-			elevatorMotorCheckCh <- elevator
+			//elevatorMotorCheckCh <- elevator
 		case floorArrival := <-floorArrivalCh:
 			elevator.Floor = floorArrival
 			hardwareIO.SetFloorIndicator(elevator.Floor)
@@ -118,7 +118,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 			}
 			setAllButtonLights(elevator)
 			ownElevatorCh <- elevator
-			elevatorMotorCheckCh <- elevator
+			//elevatorMotorCheckCh <- elevator
 		case doorTimerTimedOut := <-doorTimerTimedOutCh:
 			if obstruction{
 				break
@@ -141,7 +141,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				}
 			}
 			ownElevatorCh <- elevator
-			elevatorMotorCheckCh <- elevator
+			//elevatorMotorCheckCh <- elevator
 		case obstructionEvent := <-obstructionEventCh:
 			obstruction = obstructionEvent
 			if elevator.Behaviour == system.MD_Stop && obstructionEvent{
@@ -157,39 +157,39 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 	}
 }
 
+/*
 func checkForMotorError(elevatorMotorCheckCh <-chan system.Elevator, motorErrorCh chan<- bool){
-	var elev system.Elevator
+	var elevatorStored system.Elevator
 	for{
 		select{
 		case elevatorMotorCheck := <-elevatorMotorCheckCh:
-			elev = elevatorMotorCheck
+			elevatorStored = elevatorMotorCheck
 			time.AfterFunc(system.CheckMotorAfterDuration*time.Second, func(){
-				if elev.Floor == elevatorMotorCheck.Floor {
-					ordersBeforeNum := 0
-					ordersNotExecutedNum := 0
-					fmt.Println(elev)
-					fmt.Println(elevatorMotorCheck)
+				if elevatorStored.Floor == elevatorMotorCheck.Floor {
+					ordersStoredNum := 0
+					ordersMotorCheckNum := 0
 					for f := 0; f < system.NumFloors; f++ {
 						for b := 0; b < system.NumButtons; b++{
 							if elevatorMotorCheck.Orders[f][b] != 0 {
-								ordersBeforeNum += elevatorMotorCheck.Orders[f][b]
-								ordersNotExecutedNum += elevatorMotorCheck.Orders[f][b]
+								ordersMotorCheckNum += elevatorMotorCheck.Orders[f][b]
+								ordersStoredNum += elevatorStored.Orders[f][b]
 							}
 						}
 					}
-					if ordersBeforeNum != 0 && ordersNotExecutedNum >= ordersBeforeNum {
+					if ordersMotorCheckNum != 0 && ordersStoredNum >= ordersMotorCheckNum {
 						motorErrorCh <- true
+						fmt.Println("Motor error on this elevator!")
 					}
 				} else {
 					motorErrorCh <- false
+					fmt.Println("Not motor error")
 				}
 			})
 		}
 	}
 }
 
-
-
+*/
 
 
 

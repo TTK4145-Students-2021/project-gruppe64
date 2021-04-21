@@ -49,6 +49,7 @@ type NetOrder struct{
 	ReceivingElevatorID int
 	SendingElevatorID   int
 	Order               ButtonEvent
+	ReassignNum 		int
 }
 
 type ElevatorTagged struct  {

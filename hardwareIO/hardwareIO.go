@@ -3,6 +3,7 @@ package hardwareIO
 import (
 	"fmt"
 	"realtimeProject/project-gruppe64/system"
+	"time"
 )
 
 /*
@@ -56,5 +57,34 @@ func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- sys
 		default:
 			break
 		}
+	}
+}
+
+func CheckForMotorStop(motorErrorCh chan <- bool){
+	for {
+		time.Sleep(time.Millisecond * 500)
+		elevatorBefore := system.GetLoggedElevator()
+		time.AfterFunc(system.CheckMotorAfterDuration*time.Second, func() {
+			elevatorNow := system.GetLoggedElevator()
+			if elevatorBefore.Floor == elevatorNow.Floor && elevatorBefore.Behaviour == elevatorNow.Behaviour &&
+				elevatorBefore.MotorDirection == elevatorNow.MotorDirection {
+				ordersBeforeNum := 0
+				ordersNowNum := 0
+				for f := 0; f < system.NumFloors; f++ {
+					for b := 0; b < system.NumButtons; b++ {
+						ordersBeforeNum += elevatorBefore.Orders[f][b]
+						ordersNowNum += elevatorNow.Orders[f][b]
+					}
+				}
+				if ordersBeforeNum >= ordersNowNum && ordersBeforeNum > 0{
+					motorErrorCh <- true
+					fmt.Println("Motor error")
+				} else {
+					motorErrorCh <- false
+				}
+			} else {
+				motorErrorCh <- false
+			}
+		})
 	}
 }

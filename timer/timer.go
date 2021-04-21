@@ -1,7 +1,6 @@
 package timer
 
 import (
-	"fmt"
 	"realtimeProject/project-gruppe64/system"
 	"time"
 )
@@ -67,14 +66,3 @@ func RunMessageTimer(messageTimerCh <-chan system.NetOrder, placedMessageReceive
 	}
 }
 
-func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh chan<- system.NetOrder){
-	for{
-		select {
-		case orderTimer := <-orderTimerCh:
-			go time.AfterFunc(time.Duration(system.OrderTimerDuration)*time.Second, func() {
-				fmt.Println("Order timer timed out")
-				orderTimerTimedOutCh <- orderTimer
-			})
-		}
-	}
-}

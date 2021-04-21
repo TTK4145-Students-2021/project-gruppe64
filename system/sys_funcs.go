@@ -72,7 +72,7 @@ func LogElevator(elevInfo Elevator) {
 	}
 }
 
-func GetLoggedOrders() [NumFloors][NumButtons]int{
+func GetLoggedElevator() Elevator{
 	_mtx.Lock()
 	defer _mtx.Unlock()
 	jsonFile, err := os.Open("system/sys_log"+strconv.Itoa(ElevatorID)+".json")
@@ -83,5 +83,8 @@ func GetLoggedOrders() [NumFloors][NumButtons]int{
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	var backupElevator Elevator
 	_ = json.Unmarshal(byteValue, &backupElevator)
-	return backupElevator.Orders
+	return backupElevator
 }
+
+
+

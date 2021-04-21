@@ -2,11 +2,11 @@ package system
 
 const (
 	NumFloors = 4
-	NumElevators = 2
+	NumElevators = 3
 
-	ElevatorID =0
+	ElevatorID =1
 
-	LocalHost = "localhost:15660"
+	LocalHost = "localhost:15661"
 )
 
 
@@ -17,12 +17,17 @@ const (
 	NumButtons = 3
 	ElevatorClearOrdersVariant = CO_InMotorDirection
 	ElevatorDoorOpenDuration = 3.0 //Sec
-	CheckMotorAfterDuration = 5.0 //Sec
 
-	//Timers
+
+	CheckMotorAfterDuration = 3.0 //Sec
+
+	//Distributor
+	MaxReassignNum = 3
+
+	//Timer
 	MessageTimerDuration = 4.0 //Sec
-	OrderTimerDuration = 20.0 //Sec
 
 	//Network
 	NetResendNum = 10
+
 )
