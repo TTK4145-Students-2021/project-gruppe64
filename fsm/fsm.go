@@ -20,9 +20,9 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 	motorErrorCh <-chan bool){
 	var elevator system.Elevator
 	obstruction := false
-
 	elevator.ID = system.ElevatorID
 	elevator.Orders = system.GetLoggedElevator().Orders
+
 	select {
 	case floorArrival :=<- floorArrivalCh: // If the floor sensor registers a floor at initialization
 		elevator.Floor = floorArrival
@@ -83,7 +83,6 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				break
 			}
 			ownElevatorCh <- elevator
-			//elevatorMotorCheckCh <- elevator
 		case floorArrival := <-floorArrivalCh:
 			elevator.Floor = floorArrival
 			hardwareIO.SetFloorIndicator(elevator.Floor)
@@ -115,7 +114,6 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 			}
 			setAllButtonLights(elevator)
 			ownElevatorCh <- elevator
-			//elevatorMotorCheckCh <- elevator
 		case doorTimerTimedOut := <-doorTimerTimedOutCh:
 			if obstruction{
 				break
@@ -138,7 +136,6 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				}
 			}
 			ownElevatorCh <- elevator
-			//elevatorMotorCheckCh <- elevator
 		case obstructionEvent := <-obstructionEventCh:
 			obstruction = obstructionEvent
 			if elevator.Behaviour == system.MDStop && obstructionEvent{

@@ -85,6 +85,3 @@ func GetLoggedElevator() Elevator{
 	_ = json.Unmarshal(byteValue, &backupElevator)
 	return backupElevator
 }
-
-
-

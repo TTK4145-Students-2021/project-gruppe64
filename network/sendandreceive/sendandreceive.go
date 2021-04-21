@@ -21,23 +21,19 @@ import (
 
 func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh chan<- system.Elevator,
 	orderThroughNetCh <-chan system.NetOrder, placedMessageReceievedCh chan<- system.NetOrder,
-	orderToSelfCh chan<- system.ButtonEvent, elevatorConnectedCh chan<- int, elevatorDisconnectedCh chan<- int) {
+	orderTimerCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent, elevatorConnectedCh chan<- int,
+	elevatorDisconnectedCh chan<- int) {
 
 	transmitPeerBoolCh := make(chan bool)
 	receivePeerCh := make(chan peers.PeerUpdate)
-
 	receiveElevatorCh := make(chan system.Elevator)
 	transmitElevatorCh := make(chan system.Elevator)
-
 	receiveOrderCh := make(chan system.NetOrder)  //Used for both placed message and orders
-
 
 	go peers.Transmitter(59999, strconv.Itoa(system.ElevatorID), transmitPeerBoolCh)
 	go peers.Receiver(59999, receivePeerCh)
-
 	go bcast.Receiver(60000, receiveElevatorCh)
 	go bcast.Transmitter(60000, transmitElevatorCh)
-
 	go bcast.Receiver(60001+system.ElevatorID, receiveOrderCh)
 
 	go elevatorsShareNet(shareOwnElevatorCh, transmitElevatorCh, receiveElevatorCh, otherElevatorCh)
@@ -47,7 +43,8 @@ func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh ch
 		if elevID != system.ElevatorID {
 			transmitOrderCh := make(chan system.NetOrder) //Reset every run
 			go bcast.Transmitter(60001 +elevID, transmitOrderCh) //Transmit orders to place
-			go ordersNet(elevID, orderThroughNetCh, placedMessageReceievedCh, transmitOrderCh, receiveOrderCh, orderToSelfCh)
+			go ordersNet(elevID, orderThroughNetCh, placedMessageReceievedCh, orderTimerCh, transmitOrderCh,
+				receiveOrderCh, orderToSelfCh)
 		}
 	}
 }
@@ -84,8 +81,9 @@ func peersNet(receivePeerCh <-chan peers.PeerUpdate, elevatorConnectedCh chan<- 
 }
 
 func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
-	placedMessageRecievedCh chan<- system.NetOrder, transmitOrderCh chan<- system.NetOrder,
-	receiveOrderCh <-chan system.NetOrder, orderToSelfCh chan<- system.ButtonEvent) {
+	placedMessageRecievedCh chan<- system.NetOrder, orderTimerCh chan<- system.NetOrder,
+	transmitOrderCh chan<- system.NetOrder, receiveOrderCh <-chan system.NetOrder,
+	orderToSelfCh chan<- system.ButtonEvent) {
 	for {
 		select {
 		case orderThroughNet := <-orderThroughNetCh:
@@ -96,8 +94,9 @@ func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
 				}
 			}
 		case receiveOrder := <-receiveOrderCh:
-			if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is places message
+			if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
 				placedMessageRecievedCh <- receiveOrder
+				orderTimerCh <- receiveOrder
 			}
 
 			if receiveOrder.ReceivingElevatorID == system.ElevatorID { // If true: is order

@@ -180,4 +180,3 @@ func toBool(a byte) bool {
 	}
 	return b
 }
-

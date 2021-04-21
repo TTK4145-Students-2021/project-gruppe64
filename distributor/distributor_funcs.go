@@ -8,7 +8,6 @@ import (
 	"realtimeProject/project-gruppe64/system"
 	"strconv"
 )
-
 /*
 import (
 	"encoding/json"
@@ -64,7 +63,6 @@ func getElevatorTagged(e system.Elevator) system.ElevatorTagged{
 	return system.ElevatorTagged{Behaviour: behaviourString, Floor: e.Floor, MotorDirection: motorDirString,
 		CabOrders: cabOrds}
 }
-
 
 func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevator, elevsOnline map[int]bool) int {
 	availableElevsTagged := make(map[string]system.ElevatorTagged)
@@ -144,4 +142,9 @@ func setAllHallLights(elevs map[int]system.Elevator){
 			}
 		}
 	}
+}
+
+func removeOrder(orders []system.NetOrder, i int)  []system.NetOrder {
+	orders[i] = orders[len(orders)-1]
+	return orders[:len(orders) - 1]
 }

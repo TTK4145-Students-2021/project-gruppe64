@@ -13,7 +13,6 @@ import (
 )
  */
 
-
 func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- system.ButtonEvent,
 	floorArrivalCh chan<- int, obstructionEventCh chan<- bool)  {
 

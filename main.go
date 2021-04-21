@@ -27,7 +27,6 @@ import (
 */
 
 func primaryWork(activateAsPrimary <-chan bool){
-
 	activateLoop:
 	for{
 		select{
@@ -51,6 +50,7 @@ func primaryWork(activateAsPrimary <-chan bool){
 				messageTimerTimedOutCh := make(chan system.NetOrder)
 				elevatorConnectedCh := make(chan int, system.NumElevators - 1)
 				elevatorDisconnectedCh := make(chan int, system.NumElevators - 1)
+				orderTimerTimedOutCh := make(chan system.NetOrder)
 
 				// ->Network
 				shareOwnElevatorCh := make(chan system.Elevator)
@@ -61,6 +61,7 @@ func primaryWork(activateAsPrimary <-chan bool){
 				doorTimerDurationCh := make(chan float64)
 				messageTimerCh := make(chan system.NetOrder)
 				placedMessageReceivedCh := make(chan system.NetOrder)
+				orderTimerCh := make(chan system.NetOrder)
 
 
 				// Hardware:
@@ -69,7 +70,8 @@ func primaryWork(activateAsPrimary <-chan bool){
 
 				// FSM:
 				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh,
-					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, elevatorConnectedCh, elevatorDisconnectedCh)
+					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh,
+					elevatorConnectedCh, elevatorDisconnectedCh)
 
 				// Distributor:
 				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh,
@@ -77,11 +79,12 @@ func primaryWork(activateAsPrimary <-chan bool){
 
 				// Network:
 				go sendandreceive.RunNetworking(shareOwnElevatorCh, otherElevatorCh, orderThroughNetCh,
-					placedMessageReceivedCh, orderToSelfCh, elevatorConnectedCh, elevatorDisconnectedCh)
+					placedMessageReceivedCh, orderTimerCh, orderToSelfCh, elevatorConnectedCh, elevatorDisconnectedCh)
 
 				// Timers:
 				go timer.RunDoorTimer(doorTimerDurationCh, doorTimerTimedOutCh)
 				go timer.RunMessageTimer(messageTimerCh, placedMessageReceivedCh, messageTimerTimedOutCh)
+				go timer.RunOrderTimer(orderTimerCh, orderTimerTimedOutCh)
 
 				break activateLoop
 			}

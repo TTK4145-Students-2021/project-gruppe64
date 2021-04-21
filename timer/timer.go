@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"fmt"
 	"realtimeProject/project-gruppe64/system"
 	"time"
 )
@@ -66,3 +67,19 @@ func RunMessageTimer(messageTimerCh <-chan system.NetOrder, placedMessageReceive
 	}
 }
 
+func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh chan<- system.NetOrder){
+	timersRunningMap := make(map[system.NetOrder]bool)
+	for{
+		select{
+		case orderTimer := <-orderTimerCh:
+			if !timersRunningMap[orderTimer] { //Ikke sikker på om dette funker
+				fmt.Println("Order Timer started")
+				timersRunningMap[orderTimer] = true
+				go time.AfterFunc(time.Duration(system.OrderTimerDuration)*time.Second, func() {
+					orderTimerTimedOutCh <- orderTimer
+					delete(timersRunningMap, orderTimer)
+				})
+			}
+		}
+	}
+}
