@@ -59,6 +59,7 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 			setAllHallLights(elevators)
 
 		case messageTimerTimedOut := <-messageTimerTimedOutCh:
+			// This kind of fucks up yhe order timer:
 			if distributedOrders[messageTimerTimedOut.ReceivingElevatorID] != nil {
 				distributedOrders[messageTimerTimedOut.ReceivingElevatorID] = removeOrderFromOrders(
 					messageTimerTimedOut, distributedOrders[messageTimerTimedOut.ReceivingElevatorID])
@@ -99,4 +100,3 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 		}
 	}
 }
-
