@@ -2,16 +2,16 @@ package system
 
 type MotorDirection int
 const (
-	MD_Up   MotorDirection = 1
-	MD_Down                = -1
-	MD_Stop                = 0
+	MDUp   MotorDirection = 1
+	MDDown                = -1
+	MDStop                = 0
 )
 
 type ButtonType int
 const (
-	BT_HallUp   ButtonType = 0
-	BT_HallDown            = 1
-	BT_Cab                 = 2
+	BTHallUp   ButtonType = 0
+	BTHallDown            = 1
+	BTCab                 = 2
 )
 
 type ButtonEvent struct {
@@ -21,15 +21,15 @@ type ButtonEvent struct {
 
 type ElevatorBehaviour int
 const (
-	EB_Idle     ElevatorBehaviour = 0 // Evt skrive om til camelCase!
-	EB_DoorOpen                   = 1
-	EB_Moving                     = 2
+	EBIdle     ElevatorBehaviour = 0 // Evt skrive om til camelCase!
+	EBDoorOpen                   = 1
+	EBMoving                     = 2
 )
 
 type ClearOrdersVariant int
 const (
-	CO_All    ClearOrdersVariant = 0
-	CO_InMotorDirection                     = 1
+	COAll    ClearOrdersVariant = 0
+	COInMotorDirection                     = 1
 )
 
 type Elevator struct {

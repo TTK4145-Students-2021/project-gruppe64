@@ -51,28 +51,28 @@ func orderBelow(e system.Elevator) bool {
 func chooseDirection(e system.Elevator) system.MotorDirection{
 	var returnDir system.MotorDirection
 	switch e.MotorDirection {
-	case system.MD_Up:
+	case system.MDUp:
 		if orderAbove(e){
-			returnDir = system.MD_Up
+			returnDir = system.MDUp
 		} else if orderBelow(e) {
-			returnDir = system.MD_Down
+			returnDir = system.MDDown
 		} else {
-			returnDir = system.MD_Stop
+			returnDir = system.MDStop
 		}
-	case system.MD_Down:
+	case system.MDDown:
 
 		if orderBelow(e){
-			returnDir = system.MD_Down
+			returnDir = system.MDDown
 		} else if orderAbove(e){
-			returnDir = system.MD_Up
+			returnDir = system.MDUp
 		} else {
-			returnDir = system.MD_Stop
+			returnDir = system.MDStop
 		}
-	case system.MD_Stop:
+	case system.MDStop:
 		if orderBelow(e){
-			returnDir = system.MD_Down
+			returnDir = system.MDDown
 		} else if orderAbove(e){
-			returnDir = system.MD_Up
+			returnDir = system.MDUp
 		}
 	default:
 		break
@@ -82,20 +82,20 @@ func chooseDirection(e system.Elevator) system.MotorDirection{
 
 func elevatorShouldStop(e system.Elevator) bool {
 	switch e.MotorDirection {
-	case system.MD_Down:
-		if e.Orders[e.Floor][system.BT_HallDown] != 0 || e.Orders[e.Floor][system.BT_Cab] != 0 || !orderBelow(e){ //This gives me if eRequests == true, right?
+	case system.MDDown:
+		if e.Orders[e.Floor][system.BTHallDown] != 0 || e.Orders[e.Floor][system.BTCab] != 0 || !orderBelow(e){ //This gives me if eRequests == true, right?
 			return true
 		} else{
 			return false
 		}
-	case system.MD_Up:
-		if e.Orders[e.Floor][system.BT_HallUp] != 0 || e.Orders[e.Floor][system.BT_Cab] != 0 || !orderAbove(e){ //This gives me if eRequests == true, right?
+	case system.MDUp:
+		if e.Orders[e.Floor][system.BTHallUp] != 0 || e.Orders[e.Floor][system.BTCab] != 0 || !orderAbove(e){ //This gives me if eRequests == true, right?
 			return true
 		} else{
 			return false
 		}
 
-	case system.MD_Stop:
+	case system.MDStop:
 		break
 	default:
 		break
@@ -105,30 +105,30 @@ func elevatorShouldStop(e system.Elevator) bool {
 
 func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 	switch e.Config.ClearOrdersVariant {
-	case system.CO_All: //CV:clear request variant
+	case system.COAll: //CV:clear request variant
 		for button := 0; button < system.NumButtons; button++ { //_numButtons= 3
 			e.Orders[e.Floor][button] = 0
 		}
 
-	case system.CO_InMotorDirection:
-		e.Orders[e.Floor][system.BT_Cab] = 0
+	case system.COInMotorDirection:
+		e.Orders[e.Floor][system.BTCab] = 0
 		switch e.MotorDirection {
-		case system.MD_Up:
-			e.Orders[e.Floor][system.BT_HallUp] = 0
+		case system.MDUp:
+			e.Orders[e.Floor][system.BTHallUp] = 0
 			if orderAbove(e) == false {
-				e.Orders[e.Floor][system.BT_HallDown] = 0
+				e.Orders[e.Floor][system.BTHallDown] = 0
 			}
 
-		case system.MD_Down:
-			e.Orders[e.Floor][system.BT_HallDown] = 0
+		case system.MDDown:
+			e.Orders[e.Floor][system.BTHallDown] = 0
 			if orderBelow(e) == false {
-				e.Orders[e.Floor][system.BT_HallUp] = 0
+				e.Orders[e.Floor][system.BTHallUp] = 0
 			}
 
-		case system.MD_Stop:
+		case system.MDStop:
 		default:
-			e.Orders[e.Floor][system.BT_HallUp] = 0
-			e.Orders[e.Floor][system.BT_HallDown] = 0
+			e.Orders[e.Floor][system.BTHallUp] = 0
+			e.Orders[e.Floor][system.BTHallDown] = 0
 		}
 	}
 	return e

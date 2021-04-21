@@ -4,9 +4,9 @@ const (
 	NumFloors = 4
 	NumElevators = 3
 
-	ElevatorID =1
+	ElevatorID =0
 
-	LocalHost = "localhost:15661"
+	LocalHost = "localhost:15657"
 )
 
 
@@ -15,7 +15,7 @@ const (
 const (
 	//Elevator
 	NumButtons = 3
-	ElevatorClearOrdersVariant = CO_InMotorDirection
+	ElevatorClearOrdersVariant = COInMotorDirection
 	ElevatorDoorOpenDuration = 3.0 //Sec
 
 

@@ -26,25 +26,21 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 	select {
 	case floorArrival :=<- floorArrivalCh: // If the floor sensor registers a floor at initialization
 		elevator.Floor = floorArrival
-		elevator.MotorDirection = system.MD_Stop
-		elevator.Behaviour = system.EB_Idle
+		elevator.MotorDirection = system.MDStop
+		elevator.Behaviour = system.EBIdle
 		elevator.Config.ClearOrdersVariant = system.ElevatorClearOrdersVariant
 		elevator.Config.DoorOpenDurationSec = system.ElevatorDoorOpenDuration
 		break
 	default: // If no floor is detected by the floor sensor
 		elevator.Floor = -1
-		elevator.MotorDirection = system.MD_Down
-		hardwareIO.SetMotorDirection(system.MD_Down)
-		elevator.Behaviour = system.EB_Moving
+		elevator.MotorDirection = system.MDDown
+		hardwareIO.SetMotorDirection(elevator.MotorDirection)
+		elevator.Behaviour = system.EBMoving
 		elevator.Config.ClearOrdersVariant = system.ElevatorClearOrdersVariant
 		elevator.Config.DoorOpenDurationSec = system.ElevatorDoorOpenDuration
 		break
 	}
 
-	//elevatorMotorCheckCh := make(chan system.Elevator)
-	//motorErrorCh := make(chan bool)
-
-	//go checkForMotorError(elevatorMotorCheckCh, motorErrorCh)
 
 	for{
 		select {
@@ -58,7 +54,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				break
 			}
 			switch elevator.Behaviour {
-			case system.EB_DoorOpen:
+			case system.EBDoorOpen:
 				if elevator.Floor == orderToSelf.Floor {
 					doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 				} else {
@@ -66,20 +62,20 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				}
 				break
 
-			case system.EB_Moving:
+			case system.EBMoving:
 				elevator.Orders[orderToSelf.Floor][int(orderToSelf.Button)] = 1
 				break
-			case system.EB_Idle:
+			case system.EBIdle:
 				if elevator.Floor == orderToSelf.Floor {
 					hardwareIO.SetDoorOpenLamp(true)
 					doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
-					elevator.Behaviour = system.EB_DoorOpen
-					hardwareIO.SetMotorDirection(system.MD_Stop)
+					elevator.Behaviour = system.EBDoorOpen
+					hardwareIO.SetMotorDirection(system.MDStop)
 				} else {
 					elevator.Orders[orderToSelf.Floor][int(orderToSelf.Button)] = 1
 					elevator.MotorDirection = chooseDirection(elevator)
 					hardwareIO.SetMotorDirection(elevator.MotorDirection)
-					elevator.Behaviour = system.EB_Moving
+					elevator.Behaviour = system.EBMoving
 				}
 				break
 			default:
@@ -92,24 +88,25 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 			elevator.Floor = floorArrival
 			hardwareIO.SetFloorIndicator(elevator.Floor)
 			switch elevator.Behaviour {
-			case system.EB_Moving:
+			case system.EBMoving:
 				if elevatorShouldStop(elevator){
-					hardwareIO.SetMotorDirection(system.MD_Stop)
+					hardwareIO.SetMotorDirection(system.MDStop)
 					hardwareIO.SetDoorOpenLamp(true)
 					elevator = clearOrdersAtCurrentFloor(elevator)
 					doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 					setAllButtonLights(elevator)
-					elevator.Behaviour = system.EB_DoorOpen
+					elevator.Behaviour = system.EBDoorOpen
 				} else if elevator.Floor == 0{
-					elevator.MotorDirection = system.MD_Up
-					hardwareIO.SetMotorDirection(system.MD_Up)
+					elevator.MotorDirection = system.MDUp
+					hardwareIO.SetMotorDirection(elevator.MotorDirection)
 				} else if elevator.Floor == 3 {
-					elevator.MotorDirection = system.MD_Down
-					hardwareIO.SetMotorDirection(system.MD_Down)
+					elevator.MotorDirection = system.MDDown
+					hardwareIO.SetMotorDirection(elevator.MotorDirection)
 				} else if obstruction{
-					hardwareIO.SetMotorDirection(system.MD_Stop)
+					elevator.MotorDirection = system.MDStop
+					hardwareIO.SetMotorDirection(elevator.MotorDirection)
 					hardwareIO.SetDoorOpenLamp(true)
-					elevator.Behaviour = system.EB_DoorOpen
+					elevator.Behaviour = system.EBDoorOpen
 				}
 				break
 			default:
@@ -125,15 +122,15 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 			}
 			if doorTimerTimedOut {
 				switch elevator.Behaviour {
-				case system.EB_DoorOpen:
+				case system.EBDoorOpen:
 					clearOrdersAtCurrentFloor(elevator)
 					elevator.MotorDirection = chooseDirection(elevator)
 					hardwareIO.SetDoorOpenLamp(false)
 					hardwareIO.SetMotorDirection(elevator.MotorDirection)
-					if elevator.MotorDirection == system.MD_Stop {
-						elevator.Behaviour = system.EB_Idle
+					if elevator.MotorDirection == system.MDStop {
+						elevator.Behaviour = system.EBIdle
 					} else {
-						elevator.Behaviour = system.EB_Moving
+						elevator.Behaviour = system.EBMoving
 					}
 					break
 				default:
@@ -144,9 +141,9 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 			//elevatorMotorCheckCh <- elevator
 		case obstructionEvent := <-obstructionEventCh:
 			obstruction = obstructionEvent
-			if elevator.Behaviour == system.MD_Stop && obstructionEvent{
+			if elevator.Behaviour == system.MDStop && obstructionEvent{
 				hardwareIO.SetDoorOpenLamp(true)
-				elevator.Behaviour = system.EB_DoorOpen
+				elevator.Behaviour = system.EBDoorOpen
 			}
 
 			if !obstruction {
@@ -156,42 +153,3 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 		}
 	}
 }
-
-/*
-func checkForMotorError(elevatorMotorCheckCh <-chan system.Elevator, motorErrorCh chan<- bool){
-	var elevatorStored system.Elevator
-	for{
-		select{
-		case elevatorMotorCheck := <-elevatorMotorCheckCh:
-			elevatorStored = elevatorMotorCheck
-			time.AfterFunc(system.CheckMotorAfterDuration*time.Second, func(){
-				if elevatorStored.Floor == elevatorMotorCheck.Floor {
-					ordersStoredNum := 0
-					ordersMotorCheckNum := 0
-					for f := 0; f < system.NumFloors; f++ {
-						for b := 0; b < system.NumButtons; b++{
-							if elevatorMotorCheck.Orders[f][b] != 0 {
-								ordersMotorCheckNum += elevatorMotorCheck.Orders[f][b]
-								ordersStoredNum += elevatorStored.Orders[f][b]
-							}
-						}
-					}
-					if ordersMotorCheckNum != 0 && ordersStoredNum >= ordersMotorCheckNum {
-						motorErrorCh <- true
-						fmt.Println("Motor error on this elevator!")
-					}
-				} else {
-					motorErrorCh <- false
-					fmt.Println("Not motor error")
-				}
-			})
-		}
-	}
-}
-
-*/
-
-
-
-
-

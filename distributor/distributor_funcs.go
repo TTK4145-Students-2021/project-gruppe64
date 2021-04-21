@@ -31,22 +31,22 @@ func initiateElevators() map[int] system.Elevator {
 func getElevatorTagged(e system.Elevator) system.ElevatorTagged{
 	var behaviourString string
 	switch e.Behaviour {
-	case system.EB_Idle:
+	case system.EBIdle:
 		behaviourString = "idle"
-	case system.EB_DoorOpen:
+	case system.EBDoorOpen:
 		behaviourString = "doorOpen"
-	case system.EB_Moving:
+	case system.EBMoving:
 		behaviourString = "moving"
 	default:
 		behaviourString = ""
 	}
 	var motorDirString string
 	switch e.MotorDirection {
-	case system.MD_Up:
+	case system.MDUp:
 		motorDirString = "up"
-	case system.MD_Down:
+	case system.MDDown:
 		motorDirString = "down"
-	case system.MD_Stop:
+	case system.MDStop:
 		motorDirString = "stop"
 	default:
 		motorDirString = ""
@@ -83,9 +83,9 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 	elevatorsTagged := system.ElevatorsTagged{}
 	elevatorsTagged.States = availableElevsTagged
 	switch ord.Button {
-	case system.BT_HallUp:
+	case system.BTHallUp:
 		elevatorsTagged.HallOrders[ord.Floor][0] = true
-	case system.BT_HallDown:
+	case system.BTHallDown:
 		elevatorsTagged.HallOrders[ord.Floor][1] = true
 	default:
 		break

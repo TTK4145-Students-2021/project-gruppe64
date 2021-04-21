@@ -31,7 +31,7 @@ func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- sys
 		select {
 		case a := <- drvButtons:
 			fmt.Printf("%+v\n", a)
-			if a.Button == system.BT_Cab { //Sjekker om til fsm eller til distributor
+			if a.Button == system.BTCab { //Sjekker om til fsm eller til distributor
 				orderToSelfCh <- a
 			} else {
 				hallOrderCh <- a
@@ -44,16 +44,7 @@ func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- sys
 			obstructionEventCh <- a
 		case a := <- drvStop:
 			// Can choose if implemented
-			for a {
-				SetMotorDirection(system.MD_Stop)
-				SetStopLamp(true)
-			}
 			fmt.Printf("%+v\n", a)
-			for f := 0; f < system.NumFloors; f++ {
-				for b := system.ButtonType(0); b < 3; b++ {
-					SetButtonLamp(b, f, false)
-				}
-			}
 		default:
 			break
 		}
