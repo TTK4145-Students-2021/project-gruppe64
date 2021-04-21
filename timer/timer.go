@@ -14,10 +14,7 @@ import (
 )
  */
 
-const(
-	messageTimerDuration = 4 //sek
-	orderTimerDuration = 20 //sek
-)
+
 
 func RunDoorTimer (doorTimerDuration <-chan float64, doorTimerTimedOut chan<- bool) {
 	timerRunning := false
@@ -63,7 +60,7 @@ func RunMessageTimer(messageTimer <-chan system.NetOrder, placedMessageReceived 
 		select {
 		case msgTmr := <-messageTimer:
 			timersRunningMap[msgTmr] = true
-			go time.AfterFunc(time.Duration(messageTimerDuration)*time.Second, func(){
+			go time.AfterFunc(time.Duration(system.MessageTimerDuration)*time.Second, func(){
 				if timersRunningMap[msgTmr]{
 					messageTimerTimedOut <- msgTmr
 					delete(timersRunningMap, msgTmr)
@@ -82,7 +79,7 @@ func RunOrderTimer(orderTimer <-chan system.NetOrder, orderTimerTimedOut chan<- 
 	for{
 		select {
 		case ord := <-orderTimer:
-			go time.AfterFunc(time.Duration(orderTimerDuration)*time.Second, func() {
+			go time.AfterFunc(time.Duration(system.OrderTimerDuration)*time.Second, func() {
 				fmt.Println("Order timer timed out")
 				orderTimerTimedOut <- ord
 			})

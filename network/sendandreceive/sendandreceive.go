@@ -20,11 +20,6 @@ import (
 )
 */
 
-const (
-	resendNum = 10
-	)
-
-
 
 func SetUpReceiverAndTransmitterPorts(receiveElevatorInfo chan system.Elevator, broadcastElevatorInfo chan system.Elevator,
 	networkReceive chan system.NetOrder, sendingOrderThroughNet <-chan system.NetOrder, placedMessageReceived chan<- system.NetOrder,
@@ -75,7 +70,7 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 		case sOrdNet := <-sendingOrderThroughNet:
 			if sOrdNet.ReceivingElevatorID == threadElevatorID {
 				fmt.Printf("Order sent through network: %#v\n", sOrdNet)
-				for i := 0; i < resendNum; i++ {
+				for i := 0; i < system.NetResendNum; i++ {
 					time.Sleep(1 * time.Millisecond)
 					networkSend <- sOrdNet
 				}
@@ -89,7 +84,7 @@ func placeOrderNetworking(threadElevatorID int, sendingOrderThroughNet <-chan sy
 			if netReceive.ReceivingElevatorID == system.ElevatorID { //THEN IT IS A ORDER
 				fmt.Printf("Order received: %#v\n", netReceive)
 				orderToSelf <- netReceive.Order
-				for i := 0; i < resendNum; i++ {
+				for i := 0; i < system.NetResendNum; i++ {
 					networkSend <- netReceive //As placed message }
 				}
 			}

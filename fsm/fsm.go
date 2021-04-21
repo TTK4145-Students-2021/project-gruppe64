@@ -25,16 +25,16 @@ func ElevatorFSM(orderToSelf <-chan system.ButtonEvent, floorArrival <-chan int,
 		elevator.Floor = flrA
 		elevator.MotorDirection = system.MD_Stop
 		elevator.Behaviour = system.EB_Idle
-		elevator.Config.ClearOrdersVariant = system.CO_InMotorDirection
-		elevator.Config.DoorOpenDurationSec = 3.0
+		elevator.Config.ClearOrdersVariant = system.ElevatorClearOrdersVariant
+		elevator.Config.DoorOpenDurationSec = system.ElevatorDoorOpenDuration
 		break
 	default: // If no floor is detected by the floor sensor
 		elevator.Floor = -1
 		elevator.MotorDirection = system.MD_Down
 		hardwareIO.SetMotorDirection(system.MD_Down)
 		elevator.Behaviour = system.EB_Moving
-		elevator.Config.ClearOrdersVariant = system.CO_InMotorDirection
-		elevator.Config.DoorOpenDurationSec = 3.0
+		elevator.Config.ClearOrdersVariant = system.ElevatorClearOrdersVariant
+		elevator.Config.DoorOpenDurationSec = system.ElevatorDoorOpenDuration
 		break
 	}
 

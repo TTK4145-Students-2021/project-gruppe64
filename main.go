@@ -95,8 +95,6 @@ func primaryWork(activateAsPrimary <-chan bool){
 }
 
 
-
-
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	activateAsPrimaryCh := make(chan bool)
