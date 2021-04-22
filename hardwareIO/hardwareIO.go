@@ -67,13 +67,16 @@ func CheckForMotorStop(motorErrorCh chan <- bool){
 					}
 				}
 				if ordersBeforeNum >= ordersNowNum && ordersBeforeNum > 0{
-					motorErrorCh <- true
-					fmt.Println("Motor error")
-				} else {
-					motorErrorCh <- false
+					if !elevatorNow.MotorError{
+						motorErrorCh <- true
+						fmt.Println("Motor error")
+					}
 				}
 			} else {
-				motorErrorCh <- false
+				if elevatorNow.MotorError{
+					motorErrorCh <- false
+					fmt.Println("Motor functioning again!")
+				}
 			}
 		})
 	}
