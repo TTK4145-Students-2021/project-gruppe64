@@ -148,3 +148,14 @@ func removeOrder(orders []system.NetOrder, i int)  []system.NetOrder {
 	orders[i] = orders[len(orders)-1]
 	return orders[:len(orders) - 1]
 }
+
+func checkIfOnlyOneOnline(elevsOnline map[int]bool) bool {
+	for ID, online := range elevsOnline{
+		if ID != system.ElevatorID{
+			if online {
+				return false
+			}
+		}
+	}
+	return true
+}
