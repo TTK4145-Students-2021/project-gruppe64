@@ -109,17 +109,19 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 }
 
 // Sets the elevators' hall lights according to all elevators
-func setAllHallLights(elevs map[int]system.Elevator){
+func setAllHallLights(elevs map[int]system.Elevator, elevsOnline map[int]bool){
 	lightsToSet := [system.NumFloors][system.NumButtons]int{}
 	for _, e := range elevs {
-		for f := 0; f < system.NumFloors; f++ {
-			for b := 0; b < system.NumButtons - 1; b++ {
-				if e.Orders[f][b] == 0 {
-					if lightsToSet[f][b] != 1 {
-						lightsToSet[f][b] = 0
+		if elevsOnline[e.ID] {
+			for f := 0; f < system.NumFloors; f++ {
+				for b := 0; b < system.NumButtons-1; b++ {
+					if e.Orders[f][b] == 0 {
+						if lightsToSet[f][b] != 1 {
+							lightsToSet[f][b] = 0
+						}
+					} else {
+						lightsToSet[f][b] = 1
 					}
-				} else {
-					lightsToSet[f][b] = 1
 				}
 			}
 		}

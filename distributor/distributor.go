@@ -31,13 +31,13 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 
 		case otherElevator:= <-otherElevatorCh:
 			elevators[otherElevator.ID] = otherElevator
-			setAllHallLights(elevators)
+			setAllHallLights(elevators, elevatorsOnline)
 
 		case ownElevator := <-ownElevatorCh:
 			shareOwnElevatorCh <- ownElevator
 			system.LogElevator(ownElevator)
 			elevators[system.ElevatorID] = ownElevator
-			setAllHallLights(elevators)
+			setAllHallLights(elevators, elevatorsOnline)
 
 		case messageTimerTimedOut := <-messageTimerTimedOutCh:
 			if messageTimerTimedOut.ReassignNum == system.MaxReassignNum{
