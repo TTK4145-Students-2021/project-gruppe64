@@ -112,7 +112,7 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 func setAllHallLights(elevs map[int]system.Elevator, elevsOnline map[int]bool){
 	lightsToSet := [system.NumFloors][system.NumButtons]int{}
 	for _, e := range elevs {
-		if elevsOnline[e.ID] {
+		if elevsOnline[e.ID] || e.ID == system.ElevatorID {
 			for f := 0; f < system.NumFloors; f++ {
 				for b := 0; b < system.NumButtons-1; b++ {
 					if e.Orders[f][b] == 0 {
