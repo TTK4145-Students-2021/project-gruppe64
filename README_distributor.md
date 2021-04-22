@@ -23,8 +23,8 @@ Distributes the orders based on the calculation done by the cost function ([hall
 -`orderThroughNetCh`, `orderTimerCh`, `messageTimerCh`: sends a NetOrder type form system.
 
 ## Functions
-### `initiateElevators`
-### `getElevatorTagged`
-### `getDesignatedElevatorID`
-### `setAllHallLights`
-### `checkIfOnlyOneOnline`
+**`initiateElevators`**
+**`getElevatorTagged`
+**`getDesignatedElevatorID`
+**`setAllHallLights`
+**`checkIfOnlyOneOnline`
