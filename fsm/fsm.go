@@ -14,7 +14,9 @@ import (
 )
  */
 
-
+// GO-ROUTINE, main initiated
+// Controls the state of the elevator based on input from hardwareIO. Updates the designator on its' own
+// elevator struct. Uses the doorTimer for timing the opening of doors.
 func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan int, obstructionEventCh <-chan bool,
 	ownElevatorCh chan<- system.Elevator, doorTimerDurationCh chan<- float64, doorTimerTimedOutCh <-chan bool,
 	motorErrorCh <-chan bool, removeOrderCh <-chan system.ButtonEvent){
@@ -24,7 +26,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 	elevator.Orders = system.GetLoggedElevator().Orders
 
 	select {
-	case floorArrival :=<- floorArrivalCh: // If the floor sensor registers a floor at initialization
+	case floorArrival :=<- floorArrivalCh:
 		elevator.Floor = floorArrival
 		elevator.MotorDirection = system.MDStop
 		elevator.Behaviour = system.EBIdle
@@ -86,6 +88,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				break
 			}
 			ownElevatorCh <- elevator
+
 		case floorArrival := <-floorArrivalCh:
 			elevator.Floor = floorArrival
 			hardwareIO.SetFloorIndicator(elevator.Floor)
@@ -117,6 +120,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 			}
 			setAllButtonLights(elevator)
 			ownElevatorCh <- elevator
+
 		case doorTimerTimedOut := <-doorTimerTimedOutCh:
 			if obstruction{
 				break
@@ -139,13 +143,13 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 				}
 			}
 			ownElevatorCh <- elevator
+
 		case obstructionEvent := <-obstructionEventCh:
 			obstruction = obstructionEvent
 			if elevator.Behaviour == system.MDStop && obstructionEvent{
 				hardwareIO.SetDoorOpenLamp(true)
 				elevator.Behaviour = system.EBDoorOpen
 			}
-
 			if !obstruction {
 				doorTimerDurationCh <- elevator.Config.DoorOpenDurationSec
 				break

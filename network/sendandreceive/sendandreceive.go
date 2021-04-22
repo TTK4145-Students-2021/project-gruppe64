@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 /*
 import (
 	"../../hardwareIO"
@@ -22,6 +21,8 @@ import (
  */
 
 
+// GO-ROUTINE, main initiated
+// Sets up go-routines for networking; peer-connection, elevator-structs, orders and "order placed" messages.
 func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh chan<- system.Elevator,
 	orderThroughNetCh <-chan system.NetOrder, placedMessageReceievedCh chan<- system.NetOrder,
 	orderTimerCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent, elevatorConnectedCh chan<- int,
@@ -52,6 +53,7 @@ func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh ch
 	}
 }
 
+// Handles sending and receiving elevator structs
 func elevatorsShareNet(shareOwnElevatorCh <- chan system.Elevator, transmitElevatorCh chan <- system.Elevator, receiveElevatorCh <- chan system.Elevator,
 	otherElevatorCh chan<- system.Elevator) {
 	for {
@@ -67,7 +69,9 @@ func elevatorsShareNet(shareOwnElevatorCh <- chan system.Elevator, transmitEleva
 	}
 }
 
-func peersNet(receivePeerCh <-chan peers.PeerUpdate, elevatorConnectedCh chan<- int, elevatorDisconnectedCh chan<- int){
+// Handles disconnecting and connecting peers
+func peersNet(receivePeerCh <-chan peers.PeerUpdate, elevatorConnectedCh chan<- int,
+	elevatorDisconnectedCh chan<- int){
 	for {
 		select {
 		case receivePeer := <-receivePeerCh:
@@ -83,6 +87,7 @@ func peersNet(receivePeerCh <-chan peers.PeerUpdate, elevatorConnectedCh chan<- 
 	}
 }
 
+// Handles sending and receiving orders and "order placed" messages
 func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
 	placedMessageRecievedCh chan<- system.NetOrder, orderTimerCh chan<- system.NetOrder,
 	transmitOrderCh chan<- system.NetOrder, receiveOrderCh <-chan system.NetOrder,
@@ -96,13 +101,13 @@ func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
 					transmitOrderCh <- orderThroughNet
 				}
 			}
+
 		case receiveOrder := <-receiveOrderCh:
 			hardwareIO.SetButtonLamp(receiveOrder.Order.Button, receiveOrder.Order.Floor, true)
 			if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
 				placedMessageRecievedCh <- receiveOrder
 				orderTimerCh <- receiveOrder
 			}
-
 			if receiveOrder.ReceivingElevatorID == system.ElevatorID { // If true: is order
 				orderToSelfCh <- receiveOrder.Order
 				for i := 0; i < system.NetResendNum; i++ {

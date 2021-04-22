@@ -12,19 +12,6 @@ import (
 )
 */
 
-func setAllButtonLights(e system.Elevator){
-	for f := 0; f < system.NumFloors; f++ {
-		for b := 0; b < system.NumButtons; b++  {
-			if e.Orders[f][b] != 0 {
-				hardwareIO.SetButtonLamp(system.ButtonType(b), f, true)
-			} else {
-				hardwareIO.SetButtonLamp(system.ButtonType(b), f, false)
-			}
-		}
-	}
-}
-
-
 func orderAbove(e system.Elevator) bool {
 	for f := e.Floor+1; f < system.NumFloors; f++ {
 		for b := 0; b < system.NumButtons; b++ {
@@ -82,13 +69,16 @@ func chooseDirection(e system.Elevator) system.MotorDirection{
 func elevatorShouldStop(e system.Elevator) bool {
 	switch e.MotorDirection {
 	case system.MDDown:
-		if e.Orders[e.Floor][system.BTHallDown] != 0 || e.Orders[e.Floor][system.BTCab] != 0 || !orderBelow(e){ //This gives me if eRequests == true, right?
+		if e.Orders[e.Floor][system.BTHallDown] != 0 ||
+			e.Orders[e.Floor][system.BTCab] != 0 || !orderBelow(e){
 			return true
 		} else{
 			return false
 		}
+
 	case system.MDUp:
-		if e.Orders[e.Floor][system.BTHallUp] != 0 || e.Orders[e.Floor][system.BTCab] != 0 || !orderAbove(e){ //This gives me if eRequests == true, right?
+		if e.Orders[e.Floor][system.BTHallUp] != 0 ||
+			e.Orders[e.Floor][system.BTCab] != 0 || !orderAbove(e){ //This gives me if eRequests == true, right?
 			return true
 		} else{
 			return false
@@ -96,6 +86,7 @@ func elevatorShouldStop(e system.Elevator) bool {
 
 	case system.MDStop:
 		break
+
 	default:
 		break
 	}
@@ -105,10 +96,9 @@ func elevatorShouldStop(e system.Elevator) bool {
 func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 	switch e.Config.ClearOrdersVariant {
 	case system.COAll: //CV:clear request variant
-		for button := 0; button < system.NumButtons; button++ { //_numButtons= 3
+		for button := 0; button < system.NumButtons; button++ {
 			e.Orders[e.Floor][button] = 0
 		}
-
 	case system.COInMotorDirection:
 		e.Orders[e.Floor][system.BTCab] = 0
 		switch e.MotorDirection {
@@ -131,4 +121,17 @@ func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 		}
 	}
 	return e
+}
+
+// Sets the cab- and hall lights according to the elevators' orders
+func setAllButtonLights(e system.Elevator){
+	for f := 0; f < system.NumFloors; f++ {
+		for b := 0; b < system.NumButtons; b++  {
+			if e.Orders[f][b] != 0 {
+				hardwareIO.SetButtonLamp(system.ButtonType(b), f, true)
+			} else {
+				hardwareIO.SetButtonLamp(system.ButtonType(b), f, false)
+			}
+		}
+	}
 }

@@ -27,6 +27,7 @@ func initiateElevators() map[int] system.Elevator {
 	return elevs
 }
 
+// Translates an standard elevator struct to the struct needed for executing hall_request_assigner
 func getElevatorTagged(e system.Elevator) system.ElevatorTagged{
 	var behaviourString string
 	switch e.Behaviour {
@@ -64,6 +65,7 @@ func getElevatorTagged(e system.Elevator) system.ElevatorTagged{
 		CabOrders: cabOrds}
 }
 
+// Returns the ID of the elevator whom got the order designated from hall_request_assigner
 func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevator, elevsOnline map[int]bool) int {
 	availableElevsTagged := make(map[string]system.ElevatorTagged)
 	for ID, e := range elevs {
@@ -93,7 +95,6 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 		log.Fatal(errM)
 	}
 	costCmd := exec.Command("./distributor/hall_request_assigner.exe", "--input",  string(elevsEncoded))
-	// LINUX:
 	// costCmd := exec.Command("./distributor/hall_request_assigner", "--input",  string(elevsEncoded))
 	out, errO := costCmd.Output()
 	if errO != nil {
@@ -118,6 +119,7 @@ func getDesignatedElevatorID(ord system.ButtonEvent, elevs map[int]system.Elevat
 	return -1
 }
 
+// Sets the elevators' hall lights according to all elevators
 func setAllHallLights(elevs map[int]system.Elevator){
 	lightsToSet := [system.NumFloors][system.NumButtons]int{}
 	for _, e := range elevs {
@@ -142,16 +144,4 @@ func setAllHallLights(elevs map[int]system.Elevator){
 			}
 		}
 	}
-}
-
-
-func checkIfOnlyOneOnline(elevsOnline map[int]bool) bool {
-	for ID, online := range elevsOnline{
-		if ID != system.ElevatorID{
-			if online {
-				return false
-			}
-		}
-	}
-	return true
 }

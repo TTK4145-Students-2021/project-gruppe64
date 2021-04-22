@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var _mtx sync.Mutex
+var _mtx sync.Mutex // Mutex to protect system log
 
 func SpawnBackup() {
 	_mtx = sync.Mutex{}
@@ -45,6 +45,9 @@ func CheckPrimaryExistence(activateAsPrimary chan<- bool) {
 	}
 }
 
+// GOROUTINE, main-initiated
+// While alive, the primary will document its' existence by counting and documenting
+// the number to file.
 func PrimaryDocumentation() {
 	docNum := 0
 	for {

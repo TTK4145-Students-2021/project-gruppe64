@@ -21,7 +21,7 @@ type ButtonEvent struct {
 
 type ElevatorBehaviour int
 const (
-	EBIdle     ElevatorBehaviour = 0 // Evt skrive om til camelCase!
+	EBIdle     ElevatorBehaviour = 0
 	EBDoorOpen                   = 1
 	EBMoving                     = 2
 )
@@ -29,7 +29,7 @@ const (
 type ClearOrdersVariant int
 const (
 	COAll    ClearOrdersVariant = 0
-	COInMotorDirection                     = 1
+	COInMotorDirection          = 1
 )
 
 type Elevator struct {
@@ -52,13 +52,14 @@ type NetOrder struct{
 	ReassignNum 		int
 }
 
+
+// Types for for input to the distributor hall_request_assigner
 type ElevatorTagged struct  {
 	Behaviour string                 `json:"behaviour"`
 	Floor int                        `json:"floor"`
 	MotorDirection string            `json:"direction"`
 	CabOrders [NumFloors]bool `json:"cabRequests"`
 }
-
 type ElevatorsTagged struct{
 	HallOrders [NumFloors][2]bool `json:"hallRequests"`
 	States map[string]ElevatorTagged     `json:"states"`

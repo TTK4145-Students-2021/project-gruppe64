@@ -18,6 +18,10 @@ import (
 )
  */
 
+// Source for code in this file:
+// https://github.com/TTK4145/driver-go/blob/master/elevio/elevator_io.go
+
+
 const _pollRate = 20 * time.Millisecond
 
 var _initialized bool = false

@@ -12,6 +12,10 @@ import (
 )
 */
 
+// GO-ROUTINE, main initiated
+// Handles all hall orders from the elevators' hall panel. Keeps track of the elevator-structs of all elevators on
+// net, including its own. Times messages for order distribution as well as the order execution itself, and handles
+// the timeouts.
 func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-chan system.Elevator,
 	ownElevatorCh <-chan system.Elevator, shareOwnElevatorCh chan<- system.Elevator,
 	orderThroughNetCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent,
@@ -27,7 +31,7 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 
 	for {
 		select {
-		case hallOrder := <-hallOrderCh: //BARE HER SOM SEND INN TIL HALL ORDER
+		case hallOrder := <-hallOrderCh:
 			designatedID := getDesignatedElevatorID(hallOrder, elevators, elevatorsOnline)
 			orderToSendCh <- system.NetOrder{ReceivingElevatorID: designatedID, SendingElevatorID: system.ElevatorID,
 				Order: hallOrder, ReassignNum: 0}
@@ -41,7 +45,6 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 			system.LogElevator(ownElevator)
 			elevators[system.ElevatorID] = ownElevator
 			setAllHallLights(elevators)
-
 
 		case messageTimerTimedOut := <-messageTimerTimedOutCh:
 			if messageTimerTimedOut.ReassignNum == system.MaxReassignNum{
@@ -60,7 +63,6 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 			elevatorsOnline[elevatorDisconnected] = false
 
 		case orderTimerTimedOut := <-orderTimerTimedOutCh:
-
 			elevOrds := elevators[orderTimerTimedOut.ReceivingElevatorID].Orders
 			timedOutFlr := orderTimerTimedOut.Order.Floor
 			timedOutBtn := int(orderTimerTimedOut.Order.Button)
@@ -73,19 +75,18 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 					elevators[system.ElevatorID] = elev
 					shareOwnElevatorCh <- elevators[system.ElevatorID]
 					fmt.Print("is removed from self and ")
-
 				}
 				designatedID := getDesignatedElevatorID(orderTimerTimedOut.Order, elevators, elevatorsOnline)
 				orderTimerTimedOut.ReceivingElevatorID = designatedID
 				orderTimerTimedOut.ReassignNum = 0
 				fmt.Println("given to ", designatedID)
 				orderToSendCh <- orderTimerTimedOut
-
 			}
 		}
 	}
 }
 
+// Handles the sending and reassigning of orders
 func sendOrder(orderToSendCh <-chan system.NetOrder, orderToSelfCh chan<- system.ButtonEvent,
 	orderThroughNetCh chan<- system.NetOrder, orderTimerCh chan<- system.NetOrder,
 	messageTimerCh chan<- system.NetOrder){
@@ -100,7 +101,7 @@ func sendOrder(orderToSendCh <-chan system.NetOrder, orderToSelfCh chan<- system
 				}
 			} else {
 				orderThroughNetCh <- orderToSend
-				fmt.Println("Order", orderToSend,"sent throught net")
+				fmt.Println("Order", orderToSend,"sent through net")
 				messageTimerCh <- orderToSend
 			}
 		}
