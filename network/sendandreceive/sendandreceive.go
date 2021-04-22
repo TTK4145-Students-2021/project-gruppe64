@@ -45,9 +45,9 @@ func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh ch
 
 	for elevID := 0; elevID < system.NumElevators; elevID++ {
 		if elevID != system.ElevatorID {
-			transmitOrderCh := make(chan system.NetOrder) //Reset every run
-			go bcast.Transmitter(60001 +elevID, transmitOrderCh) //Transmit orders to place
-			go ordersNet(elevID, orderThroughNetCh, placedMessageReceievedCh, orderTimerCh, transmitOrderCh,
+			transmitOrderCh := make(chan system.NetOrder)
+			go bcast.Transmitter(60001 +elevID, transmitOrderCh)
+			go ordersNet(orderThroughNetCh, placedMessageReceievedCh, orderTimerCh, transmitOrderCh,
 				receiveOrderCh, orderToSelfCh)
 		}
 	}
@@ -88,18 +88,16 @@ func peersNet(receivePeerCh <-chan peers.PeerUpdate, elevatorConnectedCh chan<- 
 }
 
 // Handles sending and receiving orders and "order placed" messages
-func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
-	placedMessageRecievedCh chan<- system.NetOrder, orderTimerCh chan<- system.NetOrder,
+func ordersNet(orderThroughNetCh <-chan system.NetOrder,
+	placedMessageReceivedCh chan<- system.NetOrder, orderTimerCh chan<- system.NetOrder,
 	transmitOrderCh chan<- system.NetOrder, receiveOrderCh <-chan system.NetOrder,
 	orderToSelfCh chan<- system.ButtonEvent) {
 	for {
 		select {
 		case orderThroughNet := <-orderThroughNetCh:
-			if orderThroughNet.ReceivingElevatorID == threadElevatorID {
 				for i := 0; i < system.NetResendNum; i++ {
 					time.Sleep(1 * time.Millisecond)
 					transmitOrderCh <- orderThroughNet
-				}
 			}
 
 		case receiveOrder := <-receiveOrderCh:
@@ -110,7 +108,7 @@ func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
 				break
 			} else {
 				if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
-					placedMessageRecievedCh <- receiveOrder
+					placedMessageReceivedCh <- receiveOrder
 					orderTimerCh <- receiveOrder
 				}
 				if receiveOrder.ReceivingElevatorID == system.ElevatorID { // If true: is order
