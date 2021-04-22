@@ -10,21 +10,19 @@ import (
 	"runtime"
 )
 
+
 /*
 import (
 	"./distributor"
 	"./fsm"
 	"./hardwareIO"
-	"./network/peers"
 	"./network/sendandreceive"
 	"./system"
 	"./timer"
-	"io/ioutil"
 	"runtime"
-	"strconv"
-	"time"
 )
-*/
+
+ */
 
 func primaryWork(activateAsPrimary <-chan bool){
 	activateLoop:

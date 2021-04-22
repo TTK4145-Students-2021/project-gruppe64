@@ -9,16 +9,18 @@ import (
 	"time"
 )
 
+
 /*
 import (
+	"../../hardwareIO"
 	"../../system"
 	"../bcast"
 	"../peers"
-	"fmt"
 	"strconv"
 	"time"
 )
-*/
+ */
+
 
 func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh chan<- system.Elevator,
 	orderThroughNetCh <-chan system.NetOrder, placedMessageReceievedCh chan<- system.NetOrder,

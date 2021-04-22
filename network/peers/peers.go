@@ -10,13 +10,14 @@ import (
 
 /*
 import (
-"../conn"
-"fmt"
-"net"
-"sort"
-"time"
+	"../conn"
+	"fmt"
+	"net"
+	"sort"
+	"time"
 )
  */
+
 
 type PeerUpdate struct {
 	Peers []string

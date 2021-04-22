@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"time"
 )
- */
+*/
+
+
 
 func RunDoorTimer (doorTimerDurationCh <-chan float64, doorTimerTimedOutCh chan<- bool) {
 	timerRunning := false
