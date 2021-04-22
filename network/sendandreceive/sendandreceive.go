@@ -1,6 +1,7 @@
 package sendandreceive
 
 import (
+	"realtimeProject/project-gruppe64/hardwareIO"
 	"realtimeProject/project-gruppe64/network/bcast"
 	"realtimeProject/project-gruppe64/network/peers"
 	"realtimeProject/project-gruppe64/system"
@@ -94,6 +95,7 @@ func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
 				}
 			}
 		case receiveOrder := <-receiveOrderCh:
+			hardwareIO.SetButtonLamp(receiveOrder.Order.Button, receiveOrder.Order.Floor, true)
 			if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
 				placedMessageRecievedCh <- receiveOrder
 				orderTimerCh <- receiveOrder

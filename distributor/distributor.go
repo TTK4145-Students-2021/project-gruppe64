@@ -16,7 +16,7 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 	orderThroughNetCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent,
 	messageTimerCh chan<- system.NetOrder, messageTimerTimedOutCh <-chan system.NetOrder,
 	orderTimerCh chan<- system.NetOrder, orderTimerTimedOutCh <-chan system.NetOrder,
-	elevatorConnectedCh <-chan int, elevatorDisconnectedCh <-chan int){
+	elevatorConnectedCh <-chan int, elevatorDisconnectedCh <-chan int, removeOrderCh chan<- system.ButtonEvent){
 
 	elevators := initiateElevators()
 	elevatorsOnline := make(map[int]bool)
@@ -59,17 +59,27 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 			elevatorsOnline[elevatorDisconnected] = false
 
 		case orderTimerTimedOut := <-orderTimerTimedOutCh:
-			fmt.Println("Order timer timed out")
+
 			elevOrds := elevators[orderTimerTimedOut.ReceivingElevatorID].Orders
 			timedOutFlr := orderTimerTimedOut.Order.Floor
 			timedOutBtn := int(orderTimerTimedOut.Order.Button)
 			if elevOrds[timedOutFlr][timedOutBtn] != 0{
+				fmt.Print("Order timer timed out. Order ")
+				if orderTimerTimedOut.ReceivingElevatorID == system.ElevatorID {
+					removeOrderCh <- orderTimerTimedOut.Order
+					elev := elevators[system.ElevatorID]
+					elev.Orders[timedOutFlr][timedOutBtn] = 0
+					elevators[system.ElevatorID] = elev
+					shareOwnElevatorCh <- elevators[system.ElevatorID]
+					fmt.Print("is removed from self and ")
+
+				}
 				designatedID := getDesignatedElevatorID(orderTimerTimedOut.Order, elevators, elevatorsOnline)
 				orderTimerTimedOut.ReceivingElevatorID = designatedID
 				orderTimerTimedOut.ReassignNum = 0
+				fmt.Println("given to ", designatedID)
 				orderToSendCh <- orderTimerTimedOut
-			} else {
-				fmt.Println("... but the order is executed!")
+
 			}
 		}
 	}
@@ -83,13 +93,13 @@ func sendOrder(orderToSendCh <-chan system.NetOrder, orderToSelfCh chan<- system
 		case orderToSend := <- orderToSendCh:
 			if orderToSend.ReceivingElevatorID == system.ElevatorID {
 				orderToSelfCh <- orderToSend.Order
-				fmt.Println("Order sent to self")
+				fmt.Println("Order",  orderToSend,"sent to self")
 				if orderToSend.ReassignNum == 0 {
 					orderTimerCh <- orderToSend
 				}
 			} else {
 				orderThroughNetCh <- orderToSend
-				fmt.Println("Order sent throught net", orderToSend)
+				fmt.Println("Order", orderToSend,"sent throught net")
 				messageTimerCh <- orderToSend
 			}
 		}
