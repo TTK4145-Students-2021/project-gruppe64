@@ -16,8 +16,7 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 	orderThroughNetCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent,
 	messageTimerCh chan<- system.NetOrder, messageTimerTimedOutCh <-chan system.NetOrder,
 	orderTimerCh chan<- system.NetOrder, orderTimerTimedOutCh <-chan system.NetOrder,
-	elevatorConnectedCh <-chan int, elevatorDisconnectedCh <-chan int,
-	updatedOwnOrdersCh chan<- [system.NumFloors][system.NumButtons]int){
+	elevatorConnectedCh <-chan int, elevatorDisconnectedCh <-chan int){
 
 	elevators := initiateElevators()
 	elevatorsOnline := make(map[int]bool)
@@ -37,23 +36,6 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 			setAllHallLights(elevators)
 
 		case ownElevator := <-ownElevatorCh:
-			if ownElevator.MotorError && !checkIfOnlyOneOnline(elevatorsOnline){
-				for f := 0; f < system.NumFloors; f++ {
-					for b := 0; b < system.NumButtons - 1; b++ {
-						if ownElevator.Orders[f][b] != 0 {
-							ord := system.ButtonEvent{Button: system.ButtonType(b), Floor: f}
-							designatedID := getDesignatedElevatorID(ord, elevators, elevatorsOnline)
-							if designatedID != system.ElevatorID {
-								ownElevator.Orders[f][b] = 0
-								fmt.Println("Order ", ord, "sending to ", designatedID, " because of motor error")
-								orderToSendCh <- system.NetOrder{ReceivingElevatorID: designatedID,
-									SendingElevatorID: system.ElevatorID, Order: ord, ReassignNum: 0}
-							}
-						}
-					}
-				}
-			}
-			updatedOwnOrdersCh <- ownElevator.Orders
 			shareOwnElevatorCh <- ownElevator
 			system.LogElevator(ownElevator)
 			elevators[system.ElevatorID] = ownElevator

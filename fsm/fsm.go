@@ -17,7 +17,7 @@ import (
 
 func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan int, obstructionEventCh <-chan bool,
 	ownElevatorCh chan<- system.Elevator, doorTimerDurationCh chan<- float64, doorTimerTimedOutCh <-chan bool,
-	motorErrorCh <-chan bool, updatedOwnOrdersCh <-chan [system.NumFloors][system.NumButtons]int){
+	motorErrorCh <-chan bool){
 	var elevator system.Elevator
 	obstruction := false
 	elevator.ID = system.ElevatorID
@@ -46,9 +46,6 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 		case motorError := <-motorErrorCh:
 			elevator.MotorError = motorError
 			ownElevatorCh <- elevator
-
-		case updatedOwnOrders := <-updatedOwnOrdersCh:
-			elevator.Orders = updatedOwnOrders
 
 		case orderToSelf := <-orderToSelfCh:
 			hardwareIO.SetButtonLamp(orderToSelf.Button, orderToSelf.Floor, true)

@@ -2,9 +2,9 @@ package system
 
 const (
 	NumElevators = 3
-	ElevatorID =0
+	ElevatorID =1
 
-	LocalHost = "localhost:15660"
+	LocalHost = "localhost:15661"
 )
 
 //Other configurations

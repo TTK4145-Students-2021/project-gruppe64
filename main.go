@@ -42,7 +42,6 @@ func primaryWork(activateAsPrimary <-chan bool){
 				orderToSelfCh := make(chan system.ButtonEvent)
 				doorTimerTimedOutCh := make(chan bool)
 				motorErrorCh:= make(chan bool)
-				updatedOwnOrdersCh := make(chan [system.NumFloors][system.NumButtons]int)
 
 				// ->Distributor
 				hallOrderCh := make(chan system.ButtonEvent)
@@ -72,11 +71,11 @@ func primaryWork(activateAsPrimary <-chan bool){
 				// FSM:
 				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh,
 					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh,
-					elevatorConnectedCh, elevatorDisconnectedCh, updatedOwnOrdersCh)
+					elevatorConnectedCh, elevatorDisconnectedCh)
 
 				// Distributor:
 				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh,
-					doorTimerDurationCh, doorTimerTimedOutCh, motorErrorCh, updatedOwnOrdersCh)
+					doorTimerDurationCh, doorTimerTimedOutCh, motorErrorCh)
 
 				// Network:
 				go sendandreceive.RunNetworking(shareOwnElevatorCh, otherElevatorCh, orderThroughNetCh,
