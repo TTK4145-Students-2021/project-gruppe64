@@ -41,11 +41,15 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 		break
 	}
 
-
 	for{
 		select {
 		case motorError := <-motorErrorCh:
 			elevator.MotorError = motorError
+			ownElevatorCh <- elevator
+			if motorError {
+				elevator.Orders = clearAllHallOrders(elevator.Orders)
+			}
+
 
 		case orderToSelf := <-orderToSelfCh:
 			hardwareIO.SetButtonLamp(orderToSelf.Button, orderToSelf.Floor, true)

@@ -134,3 +134,11 @@ func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 	return e
 }
 
+func clearAllHallOrders(ords [system.NumFloors][system.NumButtons]int) [system.NumFloors][system.NumButtons]int {
+	for f := 0; f < system.NumFloors; f++ {
+		for b := 0; b < system.NumButtons - 1; b++ {
+			ords[f][b] = 0
+		}
+	}
+	return ords
+}

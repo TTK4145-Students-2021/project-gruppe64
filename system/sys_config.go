@@ -1,15 +1,16 @@
 package system
 
 const (
-	NumFloors = 4
 	NumElevators = 3
-	ElevatorID =2
-	LocalHost = "localhost:15662"
+	ElevatorID =0
+
+	LocalHost = "localhost:15660"
 )
 
 //Other configurations
 const (
 	//Elevator
+	NumFloors = 4
 	NumButtons = 3
 	ElevatorClearOrdersVariant = COInMotorDirection
 	ElevatorDoorOpenDuration = 3.0 //Sec
