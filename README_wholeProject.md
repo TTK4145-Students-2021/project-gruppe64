@@ -3,10 +3,10 @@
 ## Elevator Project
 The goal of the Elevator project is to create software for controlling `n` elevators working in parallel across `m` floors. The main requirements of the elevators can be summarized as
 
-- ** No orders are lost**
-- ** Multiple elevators should be more efficient than one**
-- ** An individual elevator should behave sensibly and efficiently**
-- ** The lights and buttons should function sd expected**
+- **No orders are lost**
+- **Multiple elevators should be more efficient than one**
+- **An individual elevator should behave sensibly and efficiently**
+- **The lights and buttons should function sd expected**
 
 We have chosen to implement this software using The `Go` programming language.
 
