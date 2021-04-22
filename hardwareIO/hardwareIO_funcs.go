@@ -1,22 +1,12 @@
 package hardwareIO
 
 import (
-	"fmt"
-	"net"
-	"realtimeProject/project-gruppe64/system"
-	"sync"
-	"time"
-)
-
-/*
-import (
 	"../system"
 	"fmt"
 	"net"
 	"sync"
 	"time"
 )
- */
 
 // Source for code in this file:
 // https://github.com/TTK4145/driver-go/blob/master/elevio/elevator_io.go

@@ -1,23 +1,13 @@
 package distributor
 
 import (
-	"encoding/json"
-	"log"
-	"os/exec"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/system"
-	"strconv"
-)
-/*
-import (
-	"encoding/json"
-	"log"
-	"os/exec"
 	"../hardwareIO"
 	"../system"
+	"encoding/json"
+	"log"
+	"os/exec"
 	"strconv"
 )
-*/
 
 func initiateElevators() map[int] system.Elevator {
 	elevs := make(map[int]system.Elevator)

@@ -1,16 +1,9 @@
 package fsm
 
 import (
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/system"
-)
-
-/*
-import (
 	"../hardwareIO"
 	"../system"
 )
-*/
 
 func orderAbove(e system.Elevator) bool {
 	for f := e.Floor+1; f < system.NumFloors; f++ {

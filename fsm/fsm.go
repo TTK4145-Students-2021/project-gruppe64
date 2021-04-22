@@ -1,18 +1,11 @@
 package fsm
 
-import (
-	"fmt"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/system"
-)
 
-/*
 import (
 	"../hardwareIO"
 	"../system"
 	"fmt"
 )
- */
 
 // GO-ROUTINE, main initiated
 // Controls the state of the elevator based on input from hardwareIO. Updates the designator on its' own

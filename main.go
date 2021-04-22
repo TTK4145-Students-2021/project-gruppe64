@@ -1,18 +1,6 @@
 package main
 
 import (
-	"realtimeProject/project-gruppe64/distributor"
-	"realtimeProject/project-gruppe64/fsm"
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/network/sendandreceive"
-	"realtimeProject/project-gruppe64/system"
-	"realtimeProject/project-gruppe64/timer"
-	"runtime"
-)
-
-
-/*
-import (
 	"./distributor"
 	"./fsm"
 	"./hardwareIO"
@@ -21,8 +9,6 @@ import (
 	"./timer"
 	"runtime"
 )
-
- */
 
 func primaryWork(activateAsPrimary <-chan bool){
 	activateLoop:

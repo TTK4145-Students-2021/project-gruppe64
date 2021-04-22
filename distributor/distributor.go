@@ -1,16 +1,9 @@
 package distributor
 
 import (
-	"fmt"
-	"realtimeProject/project-gruppe64/system"
-)
-
-/*
-import (
 	"../system"
 	"fmt"
 )
-*/
 
 // GO-ROUTINE, main initiated
 // Handles all hall orders from the elevators' hall panel. Keeps track of the elevator-structs of all elevators on

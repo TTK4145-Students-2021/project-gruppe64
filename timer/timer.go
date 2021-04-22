@@ -1,18 +1,10 @@
 package timer
 
 import (
-	"fmt"
-	"realtimeProject/project-gruppe64/system"
-	"time"
-)
-
-/*
-import (
 	"../system"
 	"fmt"
 	"time"
 )
-*/
 
 // GO-ROUTINE, main initiated
 // Timer for elevator doors. Times out after door timer duration if not activated again.

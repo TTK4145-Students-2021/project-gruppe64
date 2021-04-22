@@ -1,16 +1,6 @@
 package sendandreceive
 
 import (
-	"realtimeProject/project-gruppe64/hardwareIO"
-	"realtimeProject/project-gruppe64/network/bcast"
-	"realtimeProject/project-gruppe64/network/peers"
-	"realtimeProject/project-gruppe64/system"
-	"strconv"
-	"time"
-)
-
-/*
-import (
 	"../../hardwareIO"
 	"../../system"
 	"../bcast"
@@ -18,8 +8,6 @@ import (
 	"strconv"
 	"time"
 )
- */
-
 
 // GO-ROUTINE, main initiated
 // Sets up go-routines for networking; peer-connection, elevator-structs, orders and "order placed" messages.

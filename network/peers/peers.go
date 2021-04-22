@@ -1,23 +1,12 @@
 package peers
 
 import (
-	"fmt"
-	"net"
-	"realtimeProject/project-gruppe64/network/conn"
-	"sort"
-	"time"
-)
-
-/*
-import (
 	"../conn"
 	"fmt"
 	"net"
 	"sort"
 	"time"
 )
- */
-
 
 type PeerUpdate struct {
 	Peers []string

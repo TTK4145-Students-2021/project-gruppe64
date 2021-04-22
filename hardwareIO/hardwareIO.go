@@ -1,18 +1,10 @@
 package hardwareIO
 
 import (
-	"fmt"
-	"realtimeProject/project-gruppe64/system"
-	"time"
-)
-
-/*
-import (
 	"../system"
 	"fmt"
 	"time"
 )
- */
 
 // GO-ROUTINE, main initiated
 // Based on https://github.com/TTK4145/driver-go/blob/master/main.go. Hall button-orders are sent to
