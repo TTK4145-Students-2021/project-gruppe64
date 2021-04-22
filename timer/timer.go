@@ -71,7 +71,18 @@ func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh cha
 	for{
 		select{
 		case orderTimer := <-orderTimerCh:
-			if !timersRunningMap[orderTimer] {
+			startTimer := true
+			for ord, running := range timersRunningMap{
+				if ord.ReceivingElevatorID == orderTimer.ReceivingElevatorID &&
+					ord.SendingElevatorID== orderTimer.SendingElevatorID &&
+					ord.Order.Floor == orderTimer.Order.Floor &&
+					ord.Order.Button == orderTimer.Order.Button {
+					if running {
+						startTimer = false
+					}
+				}
+			}
+			if startTimer {
 				fmt.Println("Order Timer started")
 				timersRunningMap[orderTimer] = true
 				go time.AfterFunc(time.Duration(system.OrderTimerDuration)*time.Second, func() {
