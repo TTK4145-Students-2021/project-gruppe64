@@ -24,7 +24,11 @@ Distributes the orders based on the calculation done by the cost function ([hall
 
 ## Functions
 **`initiateElevators`**
+
 **`getElevatorTagged`**
+
 **`getDesignatedElevatorID`**
+
 **`setAllHallLights`**
+
 **`checkIfOnlyOneOnline`**
