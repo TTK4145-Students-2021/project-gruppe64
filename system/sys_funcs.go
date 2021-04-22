@@ -15,9 +15,7 @@ var _mtx sync.Mutex // Mutex to protect system log
 
 func SpawnBackup() {
 	_mtx = sync.Mutex{}
-	err := exec.Command("cmd", "/C", "start", "powershell", "go", "run", "main.go").Run()
-	//LINUX:
-	// err := exec.Command("gnome-terminal", "-x", "go", "run", "main.go").Run()
+	err := exec.Command("gnome-terminal", "-x", "go", "run", "main.go").Run()
 	if err != nil {
 		fmt.Println(err)
 	}
