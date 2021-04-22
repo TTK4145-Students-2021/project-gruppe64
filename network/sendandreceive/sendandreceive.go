@@ -103,15 +103,21 @@ func ordersNet(threadElevatorID int, orderThroughNetCh <-chan system.NetOrder,
 			}
 
 		case receiveOrder := <-receiveOrderCh:
+			orderTimerCh <- receiveOrder
 			hardwareIO.SetButtonLamp(receiveOrder.Order.Button, receiveOrder.Order.Floor, true)
-			if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
-				placedMessageRecievedCh <- receiveOrder
-				orderTimerCh <- receiveOrder
-			}
-			if receiveOrder.ReceivingElevatorID == system.ElevatorID { // If true: is order
-				orderToSelfCh <- receiveOrder.Order
-				for i := 0; i < system.NetResendNum; i++ {
-					transmitOrderCh <- receiveOrder // As placed message
+			if receiveOrder.SendingElevatorID == system.ElevatorID &&
+				receiveOrder.ReceivingElevatorID == system.ElevatorID{
+				break
+			} else {
+				if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
+					placedMessageRecievedCh <- receiveOrder
+					orderTimerCh <- receiveOrder
+				}
+				if receiveOrder.ReceivingElevatorID == system.ElevatorID { // If true: is order
+					orderToSelfCh <- receiveOrder.Order
+					for i := 0; i < system.NetResendNum; i++ {
+						transmitOrderCh <- receiveOrder // As placed message
+					}
 				}
 			}
 		}

@@ -49,6 +49,8 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 		case messageTimerTimedOut := <-messageTimerTimedOutCh:
 			if messageTimerTimedOut.ReassignNum == system.MaxReassignNum{
 				orderToSelfCh <- messageTimerTimedOut.Order
+				orderThroughNetCh <- system.NetOrder{ReceivingElevatorID: system.ElevatorID,
+					SendingElevatorID: system.ElevatorID, Order: messageTimerTimedOut.Order, ReassignNum: 0}
 			} else {
 				designatedID := getDesignatedElevatorID(messageTimerTimedOut.Order, elevators, elevatorsOnline)
 				messageTimerTimedOut.ReceivingElevatorID = designatedID
@@ -78,6 +80,7 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 				}
 				designatedID := getDesignatedElevatorID(orderTimerTimedOut.Order, elevators, elevatorsOnline)
 				orderTimerTimedOut.ReceivingElevatorID = designatedID
+				orderTimerTimedOut.SendingElevatorID = system.ElevatorID //Sjekk
 				orderTimerTimedOut.ReassignNum = 0
 				fmt.Println("given to ", designatedID)
 				orderToSendCh <- orderTimerTimedOut
@@ -95,6 +98,9 @@ func sendOrder(orderToSendCh <-chan system.NetOrder, orderToSelfCh chan<- system
 		case orderToSend := <- orderToSendCh:
 			if orderToSend.ReceivingElevatorID == system.ElevatorID {
 				orderToSelfCh <- orderToSend.Order
+				orderThroughNetCh <- system.NetOrder{ReceivingElevatorID: system.ElevatorID,
+					SendingElevatorID: system.ElevatorID, Order: orderToSend.Order, ReassignNum: 0}
+
 				fmt.Println("Order",  orderToSend,"sent to self")
 				if orderToSend.ReassignNum == 0 {
 					orderTimerCh <- orderToSend
