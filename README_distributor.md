@@ -1,5 +1,5 @@
 # Distributor module
-Distributes the orders based on the calculation done by the cost function.
+Distributes the orders based on the calculation done by the cost function ([hall_request_assigner]()). <- Legg til hyperlink!
 
 ## Goroutines
 ### `OrderDistributor`
@@ -7,7 +7,7 @@ Distributes the orders based on the calculation done by the cost function.
 - `hallOrderCh`: gets a ButtonEvent type from system.
 - `otherElevatorCh`, `ownElevatorCh`: gets an Elevator type from system.
 - `messageTimerTimedOutCh`, `orderTimerTimedOutCh`: gets a NetOrder type from system.
--`elevatorConnectedCh`, `elevatorDisconnectedCh`: gets an integer.
+- - `elevatorConnectedCh`, `elevatorDisconnectedCh`: gets an integer.
 
 **Sending channels**
 -`orderToSelfCh`, `removeOrderCh`: sends a ButtonEvent type from system.
@@ -21,3 +21,10 @@ Distributes the orders based on the calculation done by the cost function.
 **Sending channels**
 -`orderToSelfCh`: sends a ButtonEvent type from system.
 -`orderThroughNetCh`, `orderTimerCh`, `messageTimerCh`: sends a NetOrder type form system.
+
+## Functions
+### `initiateElevators`
+### `getElevatorTagged`
+### `getDesignatedElevatorID`
+### `setAllHallLights`
+### `checkIfOnlyOneOnline`
