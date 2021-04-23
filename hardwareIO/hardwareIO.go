@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// GO-ROUTINE, main initiated
+// GOROUTINE, main initiated
 // Based on https://github.com/TTK4145/driver-go/blob/master/main.go. Hall orders are sent to
 // distributor and cab orders are sent to FSM
 func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- system.ButtonEvent,
@@ -46,7 +46,7 @@ func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- sys
 	}
 }
 
-// GO-ROUTINE, main initiated
+// GOROUTINE, main initiated
 func CheckForMotorStop(motorErrorCh chan <- bool){
 	for {
 		time.Sleep(time.Millisecond * 500)

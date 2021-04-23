@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-// GO-ROUTINE, main initiated
+// GOROUTINE, main initiated
 // Controls the state of the elevator based on input from hardwareIO. Updates the designator on its own
 // elevator struct. Uses the doorTimer for timing the opening of doors.
 func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan int, obstructionEventCh <-chan bool,

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// GO-ROUTINE, main initiated
+// GOROUTINE, main initiated
 // Handles all hall orders from the elevators' hall panel. Keeps track of the elevator-structs of all elevators on
 // net, including its own. Times messages for order distribution as well as the order execution itself, and handles
 // the timeouts.

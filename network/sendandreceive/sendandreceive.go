@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// GO-ROUTINE, main initiated
-// Sets up go-routines for networking; peer-connection, elevator-structs, orders and "order placed" messages.
+// GOROUTINE, main initiated
+// Sets up goroutines for networking; peer-connection, elevator-structs, orders and "order placed" messages.
 func RunNetworking(shareOwnElevatorCh <-chan system.Elevator, otherElevatorCh chan<- system.Elevator,
 	orderThroughNetCh <-chan system.NetOrder, placedMessageReceievedCh chan<- system.NetOrder,
 	orderTimerCh chan<- system.NetOrder, orderToSelfCh chan<- system.ButtonEvent, elevatorConnectedCh chan<- int,
