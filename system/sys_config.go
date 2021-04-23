@@ -1,12 +1,13 @@
 package system
 
+// Project relevant configurations
 const (
 	NumElevators = 3
-	ElevatorID =0
+	ElevatorID = 0
 	LocalHost = "localhost:15657"
 )
 
-//Other configurations
+// Other configurations
 const (
 	//Elevator
 	NumFloors = 4

@@ -82,7 +82,6 @@ func OrderDistributor(hallOrderCh <-chan system.ButtonEvent, otherElevatorCh <-c
 	}
 }
 
-// Handles the sending and reassigning of orders
 func sendOrder(orderToSendCh <-chan system.NetOrder, orderToSelfCh chan<- system.ButtonEvent,
 	orderThroughNetCh chan<- system.NetOrder, orderTimerCh chan<- system.NetOrder,
 	messageTimerCh chan<- system.NetOrder){

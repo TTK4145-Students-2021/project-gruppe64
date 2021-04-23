@@ -2,11 +2,11 @@ package main
 
 import (
 	"./distributor"
-	"./fsm"
 	"./hardwareIO"
 	"./network/sendandreceive"
 	"./system"
 	"./timer"
+	"realtimeProject/project-gruppe64/fsm"
 	"runtime"
 )
 
@@ -41,26 +41,24 @@ func primaryWork(activateAsPrimary <-chan bool){
 				shareOwnElevatorCh := make(chan system.Elevator)
 				orderThroughNetCh := make(chan system.NetOrder)
 
-
 				// ->Timer
 				doorTimerDurationCh := make(chan float64)
 				messageTimerCh := make(chan system.NetOrder)
 				placedMessageReceivedCh := make(chan system.NetOrder)
 				orderTimerCh := make(chan system.NetOrder)
 
-
-				// Hardware:
+				// HardwareIO:
 				go hardwareIO.RunHardware(orderToSelfCh, hallOrderCh, floorArrivalCh, obstructionEventCh)
 				go hardwareIO.CheckForMotorStop(motorErrorCh)
 
 				// FSM:
+				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh,
+					doorTimerDurationCh, doorTimerTimedOutCh, motorErrorCh, removeOrderCh)
+
+				// Distributor:
 				go distributor.OrderDistributor(hallOrderCh, otherElevatorCh, ownElevatorCh, shareOwnElevatorCh,
 					orderThroughNetCh, orderToSelfCh, messageTimerCh, messageTimerTimedOutCh, orderTimerCh, orderTimerTimedOutCh,
 					elevatorConnectedCh, elevatorDisconnectedCh, removeOrderCh)
-
-				// Distributor:
-				go fsm.ElevatorFSM(orderToSelfCh, floorArrivalCh, obstructionEventCh, ownElevatorCh,
-					doorTimerDurationCh, doorTimerTimedOutCh, motorErrorCh, removeOrderCh)
 
 				// Network:
 				go sendandreceive.RunNetworking(shareOwnElevatorCh, otherElevatorCh, orderThroughNetCh,

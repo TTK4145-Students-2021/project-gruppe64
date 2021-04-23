@@ -95,14 +95,14 @@ func ordersNet(orderThroughNetCh <-chan system.NetOrder,
 				receiveOrder.ReceivingElevatorID == system.ElevatorID{
 				break
 			} else {
-				if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is placed message
+				if receiveOrder.SendingElevatorID == system.ElevatorID { // If true: is order placed message
 					placedMessageReceivedCh <- receiveOrder
 					orderTimerCh <- receiveOrder
 				}
 				if receiveOrder.ReceivingElevatorID == system.ElevatorID { // If true: is order
 					orderToSelfCh <- receiveOrder.Order
 					for i := 0; i < system.NetResendNum; i++ {
-						transmitOrderCh <- receiveOrder // As placed message
+						transmitOrderCh <- receiveOrder // As order placed message
 					}
 				}
 			}

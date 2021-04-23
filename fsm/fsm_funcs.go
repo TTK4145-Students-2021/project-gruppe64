@@ -71,7 +71,7 @@ func elevatorShouldStop(e system.Elevator) bool {
 
 	case system.MDUp:
 		if e.Orders[e.Floor][system.BTHallUp] != 0 ||
-			e.Orders[e.Floor][system.BTCab] != 0 || !orderAbove(e){ //This gives me if eRequests == true, right?
+			e.Orders[e.Floor][system.BTCab] != 0 || !orderAbove(e){
 			return true
 		} else{
 			return false
@@ -88,7 +88,7 @@ func elevatorShouldStop(e system.Elevator) bool {
 
 func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 	switch e.Config.ClearOrdersVariant {
-	case system.COAll: //CV:clear request variant
+	case system.COAll:
 		for button := 0; button < system.NumButtons; button++ {
 			e.Orders[e.Floor][button] = 0
 		}
@@ -116,7 +116,7 @@ func clearOrdersAtCurrentFloor(e system.Elevator) system.Elevator{
 	return e
 }
 
-// Sets the cab- and hall lights according to the elevators' orders
+// Sets the cab- and hall lights according to the elevator's own orders
 func setAllButtonLights(e system.Elevator){
 	for f := 0; f < system.NumFloors; f++ {
 		for b := 0; b < system.NumButtons; b++  {

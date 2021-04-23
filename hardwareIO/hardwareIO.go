@@ -7,8 +7,8 @@ import (
 )
 
 // GO-ROUTINE, main initiated
-// Based on https://github.com/TTK4145/driver-go/blob/master/main.go. Hall button-orders are sent to
-// distributor and cab button-orders are sent to FSM
+// Based on https://github.com/TTK4145/driver-go/blob/master/main.go. Hall orders are sent to
+// distributor and cab orders are sent to FSM
 func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- system.ButtonEvent,
 	floorArrivalCh chan<- int, obstructionEventCh chan<- bool)  {
 
@@ -38,7 +38,7 @@ func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- sys
 			fmt.Printf("%+v\n", a)
 			obstructionEventCh <- a
 		case a := <- drvStop:
-			// Can choose if implemented
+			// Functionality not implemented
 			fmt.Printf("%+v\n", a)
 		default:
 			break
@@ -47,7 +47,6 @@ func RunHardware(orderToSelfCh chan<- system.ButtonEvent, hallOrderCh chan<- sys
 }
 
 // GO-ROUTINE, main initiated
-// Checks the elevator log for motor stop every system-given time.
 func CheckForMotorStop(motorErrorCh chan <- bool){
 	for {
 		time.Sleep(time.Millisecond * 500)

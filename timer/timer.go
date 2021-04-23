@@ -7,7 +7,7 @@ import (
 )
 
 // GO-ROUTINE, main initiated
-// Timer for elevator doors. Times out after door timer duration if not activated again.
+// Timer for elevator doors. Times out after door timer duration if not reactivated.
 func RunDoorTimer (doorTimerDurationCh <-chan float64, doorTimerTimedOutCh chan<- bool) {
 	timerRunning := false
 	stopTimerFromTimeOut := false
@@ -41,7 +41,7 @@ func RunDoorTimer (doorTimerDurationCh <-chan float64, doorTimerTimedOutCh chan<
 
 // GO-ROUTINE, main initiated
 // Timer for sending orders. Start timer when order is sent, and stop timer when "order placed"-message is
-// received. Times out if placed message is not received within system-given time.
+// received. Times out if "order placed"-message is not received within system-given time.
 func RunMessageTimer(messageTimerCh <-chan system.NetOrder, placedMessageReceivedCh <-chan system.NetOrder,
 	messageTimerTimedOutCh chan<- system.NetOrder){
 	timersRunningMap := make(map[system.NetOrder]bool)
@@ -64,7 +64,7 @@ func RunMessageTimer(messageTimerCh <-chan system.NetOrder, placedMessageReceive
 }
 
 // GO-ROUTINE, main initiated
-// Timer for order execution. Start timer when order is sent (also if to the elevator itself), and stop
+// Timer for order execution. Start timer when order is sent (also to the elevator itself), and stop
 // timer when order is executed. Times out if order not executed within system-given time.
 func RunOrderTimer(orderTimerCh <-chan system.NetOrder, orderTimerTimedOutCh chan<- system.NetOrder){
 	timersRunningMap := make(map[system.NetOrder]bool)

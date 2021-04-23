@@ -44,7 +44,7 @@ func CheckPrimaryExistence(activateAsPrimary chan<- bool) {
 }
 
 // GOROUTINE, main-initiated
-// While alive, the primary will document its' existence by counting and documenting
+// While alive, the primary will document its existence by counting and documenting
 // the number to file.
 func PrimaryDocumentation() {
 	docNum := 0

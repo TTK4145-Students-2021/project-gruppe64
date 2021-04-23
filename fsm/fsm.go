@@ -8,7 +8,7 @@ import (
 )
 
 // GO-ROUTINE, main initiated
-// Controls the state of the elevator based on input from hardwareIO. Updates the designator on its' own
+// Controls the state of the elevator based on input from hardwareIO. Updates the designator on its own
 // elevator struct. Uses the doorTimer for timing the opening of doors.
 func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan int, obstructionEventCh <-chan bool,
 	ownElevatorCh chan<- system.Elevator, doorTimerDurationCh chan<- float64, doorTimerTimedOutCh <-chan bool,
@@ -26,7 +26,7 @@ func ElevatorFSM(orderToSelfCh <-chan system.ButtonEvent, floorArrivalCh <-chan 
 		elevator.Config.ClearOrdersVariant = system.ElevatorClearOrdersVariant
 		elevator.Config.DoorOpenDurationSec = system.ElevatorDoorOpenDuration
 		break
-	default: // If no floor is detected by the floor sensor
+	default: // If no floor is detected by the floor sensor at start up
 		elevator.Floor = -1
 		elevator.MotorDirection = system.MDDown
 		hardwareIO.SetMotorDirection(elevator.MotorDirection)
