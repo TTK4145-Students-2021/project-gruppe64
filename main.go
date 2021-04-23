@@ -2,11 +2,11 @@ package main
 
 import (
 	"./distributor"
+	"./fsm"
 	"./hardwareIO"
 	"./network/sendandreceive"
 	"./system"
 	"./timer"
-	"realtimeProject/project-gruppe64/fsm"
 	"runtime"
 )
 
